@@ -24,6 +24,10 @@
 * THE SOFTWARE.
 */
 
+/**
+ * Additional authors:
+ * skesgin https://github.com/skesgin
+ */
 
 #include "Example.hpp"
 

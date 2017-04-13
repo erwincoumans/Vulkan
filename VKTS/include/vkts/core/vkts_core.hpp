@@ -65,12 +65,6 @@
 #include <glm/gtc/matrix_access.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
- /**
- * Validation Helpers.
- */
-
-#include <vkts/core/validation/ValidationHelpers.hpp>
-
 /**
  * OS platform.
  */
@@ -99,6 +93,18 @@
 #include <vkts/core/fn_api_platform.hpp>
 
 //
+
+/**
+ * Macros.
+ */
+
+
+/**
+ * Validation Helpers.
+ */
+
+#include <vkts/core/validation/fn_validation_helpers.hpp>
+
 
 /**
  * Defines.
