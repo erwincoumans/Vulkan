@@ -1,0 +1,135 @@
+apply plugin: 'com.android.application'
+android {
+    compileSdkVersion 24
+    buildToolsVersion '25.0.2'
+    defaultConfig {
+        applicationId = 'tv.nopper.VKTS_Example13'
+        minSdkVersion 24
+        targetSdkVersion 24
+        ndk {
+            abiFilters 'x86', 'armeabi-v7a', 'arm64-v8a'
+        }
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_PLATFORM=android-24', '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=c++_static', '-DANDROID_CPP_FEATURES=exceptions'
+                cppFlags '-std=c++11'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+        }
+    }
+
+    defaultConfig {
+        externalNativeBuild {
+            cmake {
+                targets "VKTS_Example13"
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path '../../VKTS_Example13/CMakeLists.txt'
+        }
+    }
+}
+
+task copyFiles(type: Copy) {
+    println("Copying needed assets:")
+    //
+    copy {
+        from "../../VKTS_Binaries/shader/SPIR/V/font.vert.spv" into "./src/main/assets/shader/SPIR/V/"
+    }
+    copy {
+        from "../../VKTS_Binaries/shader/SPIR/V/font.frag.spv" into "./src/main/assets/shader/SPIR/V/"
+    }
+    copy {
+        from "../../VKTS_Binaries/shader/SPIR/V/font_df.vert.spv" into "./src/main/assets/shader/SPIR/V/"
+    }
+    copy {
+        from "../../VKTS_Binaries/shader/SPIR/V/font_df.frag.spv" into "./src/main/assets/shader/SPIR/V/"
+    }
+
+    copy {
+        from "../../VKTS_Binaries/shader/SPIR/V/bsdf.vert.spv" into "./src/main/assets/shader/SPIR/V/"
+    }
+    copy {
+        from "../../VKTS_Binaries/shader/SPIR/V/bsdf_no_texcoord.vert.spv" into "./src/main/assets/shader/SPIR/V/"
+    }
+    copy {
+        from "../../VKTS_Binaries/shader/SPIR/V/bsdf_tangents.vert.spv" into "./src/main/assets/shader/SPIR/V/"
+    }
+    copy {
+        from "../../VKTS_Binaries/shader/SPIR/V/bsdf_skinning.vert.spv" into "./src/main/assets/shader/SPIR/V/"
+    }
+    copy {
+        from "../../VKTS_Binaries/shader/SPIR/V/bsdf_tangents_two_texcoord.vert.spv" into "./src/main/assets/shader/SPIR/V/"
+    }
+    copy {
+        from "../../VKTS_Binaries/shader/SPIR/V/bsdf_skinning_two_texcoord.vert.spv" into "./src/main/assets/shader/SPIR/V/"
+    }
+    copy {
+        from "../../VKTS_Binaries/shader/SPIR/V/" into "./src/main/assets/shader/SPIR/V/"
+        include "**/glTF*.spv"
+    }
+    
+    copy {
+        from "../../VKTS_Binaries/shader/SPIR/V/environment.vert.spv" into "./src/main/assets/shader/SPIR/V/"
+    }
+    copy {
+        from "../../VKTS_Binaries/shader/SPIR/V/environment.frag.spv" into "./src/main/assets/shader/SPIR/V/"
+    }
+
+    copy {
+        from "../../VKTS_Binaries/font/" into "./src/main/assets/font/"
+        include "**/*.fnt"
+    }
+    copy {
+        from "../../VKTS_Binaries/font/" into "./src/main/assets/font/"
+        include "**/*.tga"
+    }
+    
+    copy {
+        from "../../VKTS_Binaries/glTF/mr/Corset/" into "./src/main/assets/glTF/mr/Corset/"
+        include "**/*.gltf"
+    }
+    copy {
+        from "../../VKTS_Binaries/glTF/mr/Corset/" into "./src/main/assets/glTF/mr/Corset/"
+        include "**/*.bin"
+    }
+    copy {
+        from "../../VKTS_Binaries/glTF/mr/Corset/" into "./src/main/assets/glTF/mr/Corset/"
+        include "**/*.png"
+    }
+    
+    copy {
+        from "../../VKTS_Binaries/primitives/" into "./src/main/assets/primitives/"
+        include "**/*.vkts"
+    }
+    
+    copy {
+        from "../../VKTS_Binaries/environment/" into "./src/main/assets/environment/"
+        include "**/road_in_tenerife_mountain*.vkts"
+    }
+    copy {
+        from "../../VKTS_Binaries/environment/road_in_tenerife_mountain.hdr" into "./src/main/assets/environment/"
+    }
+    
+    copy {
+        from "../../VKTS_Binaries/texture/BSDF_LUT_512_256.data" into "./src/main/assets/texture/"
+    }
+    
+    copy {
+        from "../../VKTS_Binaries/cache/environment/" into "./src/main/assets/cache/environment/"
+        include "**/road_in_tenerife_mountain*.hdr"
+    }
+}
+
+preBuild.dependsOn(copyFiles)

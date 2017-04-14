@@ -35,14 +35,15 @@
 
 // Microsoft
 //#define GLTF_SCENE_NAME "glTF/mr/BoomBox/BoomBox.gltf"
-//#define GLTF_SCENE_NAME "glTF/mr/Corset/Corset.gltf"
+#define GLTF_SCENE_NAME "glTF/mr/Corset/Corset.gltf"
 //#define GLTF_SCENE_NAME "glTF/mr/Lantern/Lantern.gltf"
 
 // Sketchfab
+//#define GLTF_SCENE_NAME "glTF/mr/busterDrone/busterDrone.gltf"
+//#define GLTF_SCENE_NAME "glTF/mr/centurion/centurion.gltf"
 //#define GLTF_SCENE_NAME "glTF/mr/damagedHelmet/damagedHelmet.gltf"
 //#define GLTF_SCENE_NAME "glTF/mr/microphone/microphone.gltf"
-#define GLTF_SCENE_NAME "glTF/mr/steampunkExplorer/steampunkExplorer.gltf"
-//#define GLTF_SCENE_NAME "glTF/mr/centurion/centurion.gltf"
+//#define GLTF_SCENE_NAME "glTF/mr/steampunkExplorer/steampunkExplorer.gltf"
 
 //
 // Specular glossiness
@@ -55,10 +56,10 @@
 
 //
 
+//#define VKTS_ENVIRONMENT_SCENE_NAME "environment/ennis.vkts"
+#define VKTS_ENVIRONMENT_SCENE_NAME "environment/road_in_tenerife_mountain.vkts"
 //#define VKTS_ENVIRONMENT_SCENE_NAME "environment/studio.vkts"
 //#define VKTS_ENVIRONMENT_SCENE_NAME "environment/terrace_near_the_granaries.vkts"
-//#define VKTS_ENVIRONMENT_SCENE_NAME "environment/road_in_tenerife_mountain.vkts"
-#define VKTS_ENVIRONMENT_SCENE_NAME "environment/ennis.vkts"
 
 #define VKTS_SPHERE_SCENE_NAME "primitives/sphere.vkts"
 
