@@ -50,8 +50,10 @@ copy("../../VKTS_Binaries/shader/SPIR/V/bsdf.vert.spv", "./assets/shader/SPIR/V/
 copy("../../VKTS_Binaries/shader/SPIR/V/bsdf_no_texcoord.vert.spv", "./assets/shader/SPIR/V/")
 copy("../../VKTS_Binaries/shader/SPIR/V/bsdf_tangents.vert.spv", "./assets/shader/SPIR/V/")
 copy("../../VKTS_Binaries/shader/SPIR/V/bsdf_skinning.vert.spv", "./assets/shader/SPIR/V/")
+copy("../../VKTS_Binaries/shader/SPIR/V/bsdf_tangents_two_texcoord.vert.spv", "./assets/shader/SPIR/V/")
+copy("../../VKTS_Binaries/shader/SPIR/V/bsdf_skinning_two_texcoord.vert.spv", "./assets/shader/SPIR/V/")
 
-copy("../../VKTS_Binaries/shader/SPIR/V/glTF_mr_forward.vert.spv", "./assets/shader/SPIR/V/")
+copy("../../VKTS_Binaries/shader/SPIR/V/glTF*.spv", "./assets/shader/SPIR/V/")
 
 copy("../../VKTS_Binaries/shader/SPIR/V/environment.vert.spv", "./assets/shader/SPIR/V/")
 copy("../../VKTS_Binaries/shader/SPIR/V/environment.frag.spv", "./assets/shader/SPIR/V/")
@@ -59,15 +61,15 @@ copy("../../VKTS_Binaries/shader/SPIR/V/environment.frag.spv", "./assets/shader/
 copy("../../VKTS_Binaries/font/*.fnt", "./assets/font/")
 copy("../../VKTS_Binaries/font/*.tga", "./assets/font/")
 
-copy("../../VKTS_Binaries/glTF/Corset/*.*", "./assets/glTF/Corset/")
+copy("../../VKTS_Binaries/glTF/mr/Corset/*.*", "./assets/glTF/mr/Corset/")
 
-copy("../../VKTS_Binaries/environment/studio*.*", "./assets/environment/")
+copy("../../VKTS_Binaries/environment/road*.*", "./assets/environment/")
 
 copy("../../VKTS_Binaries/primitives/*.vkts", "./assets/primitives/")
 
 copy("../../VKTS_Binaries/texture/BSDF_LUT_512_256.data", "./assets/texture/")
 
-copy("../../VKTS_Binaries/cache/environment/studio*.hdr", "./assets/cache/environment/")
+copy("../../VKTS_Binaries/cache/environment/road*.hdr", "./assets/cache/environment/")
 
 
 print("Building project")
