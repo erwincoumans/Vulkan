@@ -28,7 +28,6 @@
 #define VKTS_SCENEGRAPH_HPP_
 
 // TODO: Implement voxel global illumination in Example 11.
-// TODO: Implement particle system renderer in Example 14.
 
 /**
  *
@@ -139,6 +138,12 @@ typedef enum VkTsInterpolator_
 #include <vkts/scenegraph/scene/ICopyConstraint.hpp>
 
 #include <vkts/scenegraph/scene/ILimitConstraint.hpp>
+
+/**
+ * Shader.
+ */
+
+#include <vkts/scenegraph/shader/fn_shader_factory.hpp>
 
 /**
  * Scene manager.

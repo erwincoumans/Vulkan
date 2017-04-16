@@ -76,6 +76,23 @@ typedef enum VkTsVertexBufferTypeBits_
 
 typedef VkFlags VkTsVertexBufferType;
 
+typedef enum VkTsAttributesBits_
+{
+    VKTS_ATTRIBUTE_POSITION 	= 0x00000001,
+    VKTS_ATTRIBUTE_NORMAL 		= 0x00000002,
+    VKTS_ATTRIBUTE_TANGENT 		= 0x00000004,
+    VKTS_ATTRIBUTE_TEXCOORD_0 	= 0x00000008,
+    VKTS_ATTRIBUTE_TEXCOORD_1 	= 0x00000010,
+    VKTS_ATTRIBUTE_COLOR_0 		= 0x00000020,
+    VKTS_ATTRIBUTE_COLOR_1 		= 0x00000040,
+    VKTS_ATTRIBUTE_JOINTS_0 	= 0x00000080,
+    VKTS_ATTRIBUTE_JOINTS_1 	= 0x00000100,
+    VKTS_ATTRIBUTE_WEIGHTS_0 	= 0x00000200,
+    VKTS_ATTRIBUTE_WEIGHTS_1 	= 0x00000400,
+} VkTsAttributesBits;
+
+typedef VkFlags VkTsAttributes;
+
 typedef struct VkTsStructureTypeHeader_
 {
     VkStructureType sType;
