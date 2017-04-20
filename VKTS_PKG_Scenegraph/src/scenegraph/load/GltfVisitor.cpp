@@ -65,6 +65,12 @@ void GltfVisitor::visitBuffer(JSONobject& jsonObject)
 		return;
 	}
 
+	if (gltfInteger < 1)
+	{
+		state.push(GltfState_Error);
+		return;
+	}
+
 	gltfBuffer.byteLength = (int32_t)gltfInteger;
 
 	//
@@ -170,7 +176,7 @@ void GltfVisitor::visitBufferView(JSONobject& jsonObject)
 	// Required
 	//
 
-	if (!jsonObject.hasKey("buffer") || !jsonObject.hasKey("byteOffset") || !jsonObject.hasKey("byteLength"))
+	if (!jsonObject.hasKey("buffer") || !jsonObject.hasKey("byteLength"))
 	{
 		state.push(GltfState_Error);
 		return;
@@ -218,6 +224,12 @@ void GltfVisitor::visitBufferView(JSONobject& jsonObject)
 
 	if (state.top() == GltfState_Error)
 	{
+		return;
+	}
+
+	if (gltfInteger < 1)
+	{
+		state.push(GltfState_Error);
 		return;
 	}
 
@@ -754,6 +766,16 @@ void GltfVisitor::visitAccessor(JSONobject& jsonObject)
 void GltfVisitor::visitImage(JSONobject& jsonObject)
 {
 	// FIXME mimeType, bufferView
+
+	//
+	// Required
+	//
+
+	if ((!jsonObject.hasKey("uri") && !jsonObject.hasKey("bufferView")) || (jsonObject.hasKey("uri") && jsonObject.hasKey("bufferView")))
+	{
+		state.push(GltfState_Error);
+		return;
+	}
 
 	//
 	// Dependencies
