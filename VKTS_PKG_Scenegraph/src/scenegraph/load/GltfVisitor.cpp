@@ -527,6 +527,16 @@ void GltfVisitor::visitAccessor(JSONobject& jsonObject)
 	}
 
 	//
+	// Dependencies
+	//
+
+	if (jsonObject.hasKey("byteOffset") && !jsonObject.hasKey("bufferView"))
+	{
+		state.push(GltfState_Error);
+		return;
+	}
+
+	//
 	//
 	//
 
