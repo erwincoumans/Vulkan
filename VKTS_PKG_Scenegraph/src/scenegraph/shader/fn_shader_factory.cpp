@@ -131,7 +131,7 @@ static VkBool32 VKTS_APIENTRY shaderFactoryResolveInclude(std::string& shader, c
 	return VK_TRUE;
 }
 
-std::string VKTS_APIENTRY shaderFactoryCreate(const std::string& directory, const VkShaderStageFlagBits shaderStage, const VkTsAttributes attributes)
+std::string VKTS_APIENTRY shaderFactoryCreate(const std::string& directory, const VkShaderStageFlagBits shaderStage, const VkTsAttributes attributes, const VkTsMaterial material, const VkTsRenderer renderer)
 {
 	std::string extension = "";
 

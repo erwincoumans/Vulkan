@@ -93,6 +93,19 @@ typedef enum VkTsAttributesBits_
 
 typedef VkFlags VkTsAttributes;
 
+typedef enum VkTsMaterial_
+{
+    VKTS_MATERIAL_METAL_ROUGHNESS,
+	VKTS_MATERIAL_SPECULAR_GLOSSINESS,
+	VKTS_MATERIAL_COMMON
+} VkTsMaterial;
+
+typedef enum VkTsRenderer_
+{
+    VKTS_RENDERER_FORWARD,
+    VKTS_RENDERER_DEFERRED
+} VkTsRenderer;
+
 typedef struct VkTsStructureTypeHeader_
 {
     VkStructureType sType;
