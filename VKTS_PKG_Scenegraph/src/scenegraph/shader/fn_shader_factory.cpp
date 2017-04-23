@@ -29,6 +29,36 @@
 namespace vkts
 {
 
+static uint32_t VKTS_APIENTRY shaderFactoryReplace(std::string& shader, const std::string& token, const std::string& replacement)
+{
+	if (shader.length() == 0)
+	{
+		return 0;
+	}
+
+	if (token.length() == 0)
+	{
+		return 0;
+	}
+
+	//
+
+	uint32_t replaceCount = 0;
+
+	auto includeIndex = shader.find(token);
+
+	while (includeIndex != shader.npos)
+	{
+		shader.replace(includeIndex, token.length(), replacement);
+
+		replaceCount++;
+
+		includeIndex = shader.find(token);
+	}
+
+	return replaceCount;
+}
+
 static VkBool32 VKTS_APIENTRY shaderFactoryResolveInclude(std::string& shader, const std::string& directory)
 {
     std::vector<std::string> allIncludes;
@@ -108,20 +138,30 @@ std::string VKTS_APIENTRY shaderFactoryCreate(const std::string& directory, cons
 	switch (shaderStage)
 	{
 		case VK_SHADER_STAGE_VERTEX_BIT:
+		{
 			extension = ".vert";
 			break;
+		}
 		case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
+		{
 			extension = ".tesc";
 			break;
+		}
 		case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
+		{
 			extension = ".tese";
 			break;
+		}
 		case VK_SHADER_STAGE_GEOMETRY_BIT:
+		{
 			extension = ".geom";
 			break;
+		}
 		case VK_SHADER_STAGE_FRAGMENT_BIT:
+		{
 			extension = ".frag";
 			break;
+		}
 		default:
 			return "";
 	}
@@ -141,13 +181,160 @@ std::string VKTS_APIENTRY shaderFactoryCreate(const std::string& directory, cons
 
     // TODO: Header.
 
+	// Includes.
     if (!shaderFactoryResolveInclude(shader, directory))
     {
     	return "";
     }
 
-    // TODO: Attributes in.
-    // TODO: Attributes out.
+    //
+
+    std::string attributesIn;
+    std::string attributesOut;
+
+    uint32_t locationIn = 0;
+    uint32_t locationOut = 0;
+
+    for (auto currentAttribute = (uint32_t)VKTS_ATTRIBUTE_POSITION; currentAttribute <= (uint32_t)VKTS_ATTRIBUTE_WEIGHTS_1; currentAttribute *= 2)
+    {
+    	if ((currentAttribute & attributes) == currentAttribute)
+    	{
+    	    if (currentAttribute == VKTS_ATTRIBUTE_POSITION)
+    	    {
+    	    	if (shaderStage == VK_SHADER_STAGE_VERTEX_BIT)
+    	    	{
+    	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec3 in_position;";
+    	    		locationIn++;
+
+    	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec4 out_position;";
+    	    		locationOut++;
+    	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec3 out_incident;";
+    	    		locationOut++;
+    	    	}
+    	    	else
+    	    	{
+    	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec4 in_position;";
+    	    		locationIn++;
+    	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec3 in_incident;";
+    	    		locationIn++;
+
+    	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec4 out_position;";
+    	    		locationOut++;
+    	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec3 out_incident;";
+    	    		locationOut++;
+    	    	}
+    	    }
+    	    else if (currentAttribute == VKTS_ATTRIBUTE_NORMAL)
+    	    {
+	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec3 in_normal;";
+	    		locationIn++;
+
+	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec3 out_normal;";
+	    		locationOut++;
+    	    }
+    	    else if (currentAttribute == VKTS_ATTRIBUTE_TANGENT)
+    	    {
+    	    	if (shaderStage == VK_SHADER_STAGE_VERTEX_BIT)
+    	    	{
+    	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec4 in_tangent;";
+    	    		locationIn++;
+
+    	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec3 out_tangent;";
+    	    		locationOut++;
+    	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec3 out_bitangent;";
+    	    		locationOut++;
+    	    	}
+    	    	else
+    	    	{
+    	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec3 in_tangent;";
+    	    		locationIn++;
+    	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec3 in_bitangent;";
+    	    		locationIn++;
+
+    	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec3 out_tangent;";
+    	    		locationOut++;
+    	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec3 out_bitangent;";
+    	    		locationOut++;
+    	    	}
+    	    }
+    	    else if (currentAttribute == VKTS_ATTRIBUTE_TEXCOORD_0)
+    	    {
+	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec2 in_texcoord_0;";
+	    		locationIn++;
+
+	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec2 out_texcoord_0;";
+	    		locationOut++;
+    	    }
+    	    else if (currentAttribute == VKTS_ATTRIBUTE_TEXCOORD_1)
+    	    {
+	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec2 in_texcoord_1;";
+	    		locationIn++;
+
+	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec2 out_texcoord_1;";
+	    		locationOut++;
+    	    }
+    	    else if (currentAttribute == VKTS_ATTRIBUTE_COLOR_0)
+    	    {
+	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec4 in_color_0;";
+	    		locationIn++;
+
+	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec4 out_color_0;";
+	    		locationOut++;
+    	    }
+    	    else if (currentAttribute == VKTS_ATTRIBUTE_COLOR_1)
+    	    {
+	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec4 in_color_1;";
+	    		locationIn++;
+
+	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec4 out_color_1;";
+	    		locationOut++;
+    	    }
+    	    else if (currentAttribute == VKTS_ATTRIBUTE_JOINTS_0)
+    	    {
+    	    	if (shaderStage == VK_SHADER_STAGE_VERTEX_BIT)
+    	    	{
+    	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec4 in_joints_0;";
+    	    		locationIn++;
+    	    	}
+    	    }
+    	    else if (currentAttribute == VKTS_ATTRIBUTE_JOINTS_1)
+    	    {
+    	    	if (shaderStage == VK_SHADER_STAGE_VERTEX_BIT)
+    	    	{
+    	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec4 in_joints_1;";
+    	    		locationIn++;
+    	    	}
+    	    }
+    	    else if (currentAttribute == VKTS_ATTRIBUTE_WEIGHTS_0)
+    	    {
+    	    	if (shaderStage == VK_SHADER_STAGE_VERTEX_BIT)
+    	    	{
+    	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec4 in_weights_0;";
+    	    		locationIn++;
+    	    	}
+    	    }
+    	    else if (currentAttribute == VKTS_ATTRIBUTE_WEIGHTS_1)
+    	    {
+    	    	if (shaderStage == VK_SHADER_STAGE_VERTEX_BIT)
+    	    	{
+    	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec4 in_weights_1;";
+    	    		locationIn++;
+    	    	}
+    	    }
+    	}
+    }
+
+    // Attributes in.
+    if (shaderFactoryReplace(shader, "/*%VKTS_ATTRIBUTES_IN%*/", attributesIn) == 0)
+    {
+    	return "";
+    }
+
+    // Attributes out.
+    if (shaderFactoryReplace(shader, "/*%VKTS_ATTRIBUTES_OUT%*/", attributesOut) == 0)
+    {
+    	return "";
+    }
 
     // TODO: Main.
 
