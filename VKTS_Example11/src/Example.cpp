@@ -27,7 +27,7 @@
 #include "Example.hpp"
 
 Example::Example(const vkts::IContextObjectSP& contextObject, const int32_t windowIndex, const vkts::IVisualContextSP& visualContext, const vkts::ISurfaceSP& surface) :
-		IUpdateThread(), contextObject(contextObject), windowIndex(windowIndex), visualContext(visualContext), surface(surface), depthFormat(VK_FORMAT_D32_SFLOAT), camera(nullptr), inputController(nullptr), allUpdateables(), commandPool(nullptr), imageAcquiredSemaphore(nullptr), betweenSemaphore(nullptr), renderingCompleteSemaphore(nullptr), descriptorSetLayout(nullptr), descriptorImageInfos{}, descriptorBufferInfos{}, writeDescriptorSets{}, dynamicOffsetsShadowPass(), dynamicOffsetsColorPass(), vertexViewProjectionUniformBuffer(nullptr), fragmentUniformBuffer(nullptr), shadowUniformBuffer(nullptr), voxelizeViewProjectionUniformBuffer(nullptr), voxelizeModelNormalUniformBuffer(nullptr), standardVertexShaderModule(nullptr), standardFragmentShaderModule(nullptr), standardShadowFragmentShaderModule(nullptr), voxelizeVertexShaderModule(nullptr), voxelizeGeometryShaderModule(nullptr), voxelizeFragmentShaderModule(nullptr), pipelineLayout(nullptr), loadTask(), sceneLoaded(VK_FALSE), sceneManager(nullptr), sceneFactory(nullptr), scene(nullptr), swapchain(nullptr), renderPass(nullptr), shadowRenderPass(nullptr), voxelRenderPass(nullptr), allOpaqueGraphicsPipelines(), allBlendGraphicsPipelines(), allBlendCwGraphicsPipelines(), allShadowGraphicsPipelines(), allVoxelGraphicsPipelines(), shadowTexture(), msaaColorTexture(nullptr), msaaDepthTexture(nullptr), depthTexture(nullptr), voxelTexture{nullptr, nullptr, nullptr}, shadowImageView(), msaaColorImageView(nullptr), msaaDepthStencilImageView(nullptr), depthStencilImageView(nullptr), shadowSampler(nullptr), swapchainImagesCount(0), swapchainImageView(), framebuffer(), shadowFramebuffer(), cmdBuffer(), shadowCmdBuffer(), cmdBufferFence()
+		IUpdateThread(), contextObject(contextObject), windowIndex(windowIndex), visualContext(visualContext), surface(surface), depthFormat(VK_FORMAT_D32_SFLOAT), camera(nullptr), inputController(nullptr), allUpdateables(), commandPool(nullptr), imageAcquiredSemaphore(nullptr), betweenSemaphore(nullptr), renderingCompleteSemaphore(nullptr), descriptorSetLayout(nullptr), descriptorImageInfos{}, descriptorBufferInfos{}, writeDescriptorSets{}, dynamicOffsetsShadowPass(), dynamicOffsetsColorPass(), vertexViewProjectionUniformBuffer(nullptr), fragmentUniformBuffer(nullptr), shadowUniformBuffer(nullptr), voxelizeViewProjectionUniformBuffer(nullptr), voxelizeModelNormalUniformBuffer(nullptr), standardVertexShaderModule(nullptr), standardFragmentShaderModule(nullptr), standardShadowFragmentShaderModule(nullptr), voxelizeVertexShaderModule(nullptr), voxelizeGeometryShaderModule(nullptr), voxelizeFragmentShaderModule(nullptr), pipelineLayout(nullptr), loadTask(), sceneLoaded(VK_FALSE), sceneManager(nullptr), sceneFactory(nullptr), scene(nullptr), swapchain(nullptr), renderPass(nullptr), shadowRenderPass(nullptr), voxelRenderPass(nullptr), allOpaqueGraphicsPipelines(), allBlendGraphicsPipelines(), allBlendCwGraphicsPipelines(), allShadowGraphicsPipelines(), allVoxelGraphicsPipelines(), shadowTexture(), msaaColorTexture(nullptr), msaaDepthTexture(nullptr), depthTexture(nullptr), voxelTexture{nullptr, nullptr, nullptr}, shadowImageView(), msaaColorImageView(nullptr), msaaDepthStencilImageView(nullptr), depthStencilImageView(nullptr), shadowSampler(nullptr), swapchainImagesCount(0), swapchainImageView(), framebuffer(), shadowFramebuffer(), voxelFramebuffer(), cmdBuffer(), shadowCmdBuffer(), cmdBufferFence()
 {
 }
 
@@ -151,6 +151,52 @@ VkBool32 Example::buildCmdBuffer(const int32_t usedBuffer)
 
     swapchain->cmdPipelineBarrier(cmdBuffer[usedBuffer]->getCommandBuffer(), VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, usedBuffer);
 
+    //
+	// Voxel render pass.
+	//
+
+	VkRenderPassBeginInfo voxelRenderPassBeginInfo{};
+
+	voxelRenderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+
+	voxelRenderPassBeginInfo.renderPass = voxelRenderPass->getRenderPass();
+	voxelRenderPassBeginInfo.framebuffer = voxelFramebuffer[usedBuffer]->getFramebuffer();
+	voxelRenderPassBeginInfo.renderArea.offset.x = 0;
+	voxelRenderPassBeginInfo.renderArea.offset.y = 0;
+	voxelRenderPassBeginInfo.renderArea.extent = {VKTS_VOXEL_CUBE_SIZE, VKTS_VOXEL_CUBE_SIZE};
+	voxelRenderPassBeginInfo.clearValueCount = 0;
+	voxelRenderPassBeginInfo.pClearValues = nullptr;
+
+	cmdBuffer[usedBuffer]->cmdBeginRenderPass(&voxelRenderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	VkViewport voxelViewport{};
+
+	voxelViewport.x = 0.0f;
+	voxelViewport.y = 0.0f;
+	voxelViewport.width = VKTS_VOXEL_CUBE_SIZE;
+	voxelViewport.height = VKTS_VOXEL_CUBE_SIZE;
+	voxelViewport.minDepth = 0.0f;
+	voxelViewport.maxDepth = 1.0f;
+
+	vkCmdSetViewport(cmdBuffer[usedBuffer]->getCommandBuffer(), 0, 1, &voxelViewport);
+
+	VkRect2D voxelScissor{};
+
+	voxelScissor.offset.x = 0;
+	voxelScissor.offset.y = 0;
+	voxelScissor.extent = {VKTS_VOXEL_CUBE_SIZE, VKTS_VOXEL_CUBE_SIZE};
+
+	vkCmdSetScissor(cmdBuffer[usedBuffer]->getCommandBuffer(), 0, 1, &voxelScissor);
+
+	//
+
+	if (scene.get())
+	{
+		scene->drawRecursive(cmdBuffer[usedBuffer], allVoxelGraphicsPipelines, usedBuffer, dynamicOffsetsColorPass);
+	}
+
+	cmdBuffer[usedBuffer]->cmdEndRenderPass();
+
 	//
 	// Barrier, that we can read from the shadow map.
 	//
@@ -158,6 +204,16 @@ VkBool32 Example::buildCmdBuffer(const int32_t usedBuffer)
     VkImageSubresourceRange depthSubresourceRange = {VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1};
 
 	shadowTexture[usedBuffer]->getImage()->cmdPipelineBarrier(cmdBuffer[usedBuffer]->getCommandBuffer(), VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, depthSubresourceRange);
+
+	//
+	// Barrier, that we can read from the voxel image.
+	//
+
+    VkImageSubresourceRange voxelSubresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+
+	voxelTexture[usedBuffer]->getImage()->cmdPipelineBarrier(cmdBuffer[usedBuffer]->getCommandBuffer(), VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, voxelSubresourceRange);
+
+	// TODO: Continue with voxel cone tracing.
 
 	//
 
@@ -233,17 +289,17 @@ VkBool32 Example::buildCmdBuffer(const int32_t usedBuffer)
 
 	cmdBuffer[usedBuffer]->cmdEndRenderPass();
 
-    //
-	// Voxel render pass.
-	//
-
-	// TODO: Add render to 3D image.
-
 	//
 	// Barrier, that we can write to the shadow map.
 	//
 
 	shadowTexture[usedBuffer]->getImage()->cmdPipelineBarrier(cmdBuffer[usedBuffer]->getCommandBuffer(), VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, depthSubresourceRange);
+
+	//
+	// Barrier, that we can write to the image map.
+	//
+
+	voxelTexture[usedBuffer]->getImage()->cmdPipelineBarrier(cmdBuffer[usedBuffer]->getCommandBuffer(), VK_ACCESS_SHADER_WRITE_BIT, VK_IMAGE_LAYOUT_GENERAL, voxelSubresourceRange);
 
 	//
 
@@ -288,6 +344,17 @@ VkBool32 Example::buildFramebuffer(const int32_t usedBuffer)
 	shadowFramebuffer[usedBuffer] = vkts::framebufferCreate(contextObject->getDevice()->getDevice(), 0, shadowRenderPass->getRenderPass(), 1, imageViews, VKTS_SHADOW_MAP_SIZE, VKTS_SHADOW_MAP_SIZE, 1);
 
 	if (!shadowFramebuffer[usedBuffer].get())
+	{
+		vkts::logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Could not create frame buffer.");
+
+		return VK_FALSE;
+	}
+
+	// Build voxel frame buffer.
+
+	voxelFramebuffer[usedBuffer] = vkts::framebufferCreate(contextObject->getDevice()->getDevice(), 0, voxelRenderPass->getRenderPass(), 0, nullptr, VKTS_VOXEL_CUBE_SIZE, VKTS_VOXEL_CUBE_SIZE, 1);
+
+	if (!voxelFramebuffer[usedBuffer].get())
 	{
 		vkts::logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Could not create frame buffer.");
 
@@ -1382,7 +1449,7 @@ VkBool32 Example::buildDescriptorSetLayout()
     	descriptorSetLayoutBinding[5 + i].binding = VKTS_BINDING_UNIFORM_IMAGE_VOXEL_EMISSIVE + i;
     	descriptorSetLayoutBinding[5 + i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
     	descriptorSetLayoutBinding[5 + i].descriptorCount = 1;
-    	descriptorSetLayoutBinding[5 + i].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    	descriptorSetLayoutBinding[5 + i].stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     	descriptorSetLayoutBinding[5 + i].pImmutableSamplers = nullptr;
     }
 
@@ -1679,6 +1746,7 @@ VkBool32 Example::buildResources(const vkts::IUpdateThreadContext& updateContext
     swapchainImageView = vkts::SmartPointerVector<vkts::IImageViewSP>(swapchainImagesCount);
     framebuffer = vkts::SmartPointerVector<vkts::IFramebufferSP>(swapchainImagesCount);
     shadowFramebuffer = vkts::SmartPointerVector<vkts::IFramebufferSP>(swapchainImagesCount);
+    voxelFramebuffer = vkts::SmartPointerVector<vkts::IFramebufferSP>(swapchainImagesCount);
     cmdBuffer = vkts::SmartPointerVector<vkts::ICommandBuffersSP>(swapchainImagesCount);
 
     cmdBufferFence = vkts::SmartPointerVector<vkts::IFenceSP>(swapchainImagesCount);
@@ -1919,6 +1987,11 @@ void Example::terminateResources(const vkts::IUpdateThreadContext& updateContext
 				if (shadowCmdBuffer[i].get())
 				{
 					shadowCmdBuffer[i]->destroy();
+				}
+
+				if (voxelFramebuffer[i].get())
+				{
+					voxelFramebuffer[i]->destroy();
 				}
 
 				if (shadowFramebuffer[i].get())

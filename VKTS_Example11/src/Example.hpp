@@ -152,6 +152,7 @@ private:
 
     vkts::SmartPointerVector<vkts::IFramebufferSP> framebuffer;
     vkts::SmartPointerVector<vkts::IFramebufferSP> shadowFramebuffer;
+    vkts::SmartPointerVector<vkts::IFramebufferSP> voxelFramebuffer;
 
     vkts::SmartPointerVector<vkts::ICommandBuffersSP> cmdBuffer;
     vkts::SmartPointerVector<vkts::ICommandBuffersSP> shadowCmdBuffer;

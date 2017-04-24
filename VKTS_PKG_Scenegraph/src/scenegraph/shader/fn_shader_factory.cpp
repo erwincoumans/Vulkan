@@ -59,6 +59,70 @@ static uint32_t VKTS_APIENTRY shaderFactoryReplace(std::string& shader, const st
 	return replaceCount;
 }
 
+static VkBool32 VKTS_APIENTRY shaderFactoryResolveHeaderForward(std::string& shader, const std::string& directory, const VkTsMaterial material)
+{
+	std::string filename = "";
+
+	if (material == VKTS_MATERIAL_METAL_ROUGHNESS)
+	{
+		filename = "shader/GLSL/4_5/template/pbr_mr_material_header.glsl";
+	}
+	else if (material == VKTS_MATERIAL_SPECULAR_GLOSSINESS)
+	{
+		filename = "shader/GLSL/4_5/template/pbr_sg_material_header.glsl";
+	}
+	else // VKTS_MATERIAL_COMMON
+	{
+		// TODO: Add header for common material.
+	}
+
+	auto textFile = fileLoadText((directory + filename).c_str());
+
+	if (!textFile.get())
+	{
+		return VK_FALSE;
+	}
+
+    if (shaderFactoryReplace(shader, "/*%VKTS_HEADER%*/", textFile->getString()) == 0)
+    {
+    	return VK_FALSE;
+    }
+
+	return VK_TRUE;
+}
+
+static VkBool32 VKTS_APIENTRY shaderFactoryResolveMainForward(std::string& shader, const std::string& directory, const VkTsMaterial material)
+{
+	std::string filename = "";
+
+	if (material == VKTS_MATERIAL_METAL_ROUGHNESS)
+	{
+		// TODO: Add main for metal roughness material.
+	}
+	else if (material == VKTS_MATERIAL_SPECULAR_GLOSSINESS)
+	{
+		// TODO: Add main for specular glossiness material.
+	}
+	else // VKTS_MATERIAL_COMMON
+	{
+		// TODO: Add main for common material.
+	}
+
+	auto textFile = fileLoadText((directory + filename).c_str());
+
+	if (!textFile.get())
+	{
+		return VK_FALSE;
+	}
+
+    if (shaderFactoryReplace(shader, "/*%VKTS_MAIN%*/", textFile->getString()) == 0)
+    {
+    	return VK_FALSE;
+    }
+
+	return VK_TRUE;
+}
+
 static VkBool32 VKTS_APIENTRY shaderFactoryResolveInclude(std::string& shader, const std::string& directory)
 {
     std::vector<std::string> allIncludes;
@@ -179,7 +243,18 @@ std::string VKTS_APIENTRY shaderFactoryCreate(const std::string& directory, cons
 
     //
 
-    // TODO: Header.
+	// Header.
+	if (renderer == VKTS_RENDERER_FORWARD)
+	{
+		if (!shaderFactoryResolveHeaderForward(shader, directory, material))
+		{
+			return "";
+		}
+	}
+	else // VKTS_RENDERER_DEFERRED
+	{
+		// TODO: Resolve header for deferred rendering.
+	}
 
 	// Includes.
     if (!shaderFactoryResolveInclude(shader, directory))
@@ -205,11 +280,6 @@ std::string VKTS_APIENTRY shaderFactoryCreate(const std::string& directory, cons
     	    	{
     	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec3 in_position;";
     	    		locationIn++;
-
-    	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec4 out_position;";
-    	    		locationOut++;
-    	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec3 out_incident;";
-    	    		locationOut++;
     	    	}
     	    	else
     	    	{
@@ -217,7 +287,22 @@ std::string VKTS_APIENTRY shaderFactoryCreate(const std::string& directory, cons
     	    		locationIn++;
     	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec3 in_incident;";
     	    		locationIn++;
+    	    	}
 
+    	    	if (shaderStage == VK_SHADER_STAGE_FRAGMENT_BIT)
+    	    	{
+    	    		if (renderer == VKTS_RENDERER_FORWARD)
+    	    		{
+        	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec4 out_color;";
+        	    		locationOut++;
+    	    		}
+    	    		else // VKTS_RENDERER_DEFERRED
+    	    		{
+        	    		// TODO: Differentiate between material.
+    	    		}
+    	    	}
+    	    	else
+    	    	{
     	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec4 out_position;";
     	    		locationOut++;
     	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec3 out_incident;";
@@ -226,11 +311,14 @@ std::string VKTS_APIENTRY shaderFactoryCreate(const std::string& directory, cons
     	    }
     	    else if (currentAttribute == VKTS_ATTRIBUTE_NORMAL)
     	    {
-	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec3 in_normal;";
-	    		locationIn++;
+				attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec3 in_normal;";
+				locationIn++;
 
-	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec3 out_normal;";
-	    		locationOut++;
+				if (shaderStage != VK_SHADER_STAGE_FRAGMENT_BIT)
+    	    	{
+					attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec3 out_normal;";
+					locationOut++;
+    	    	}
     	    }
     	    else if (currentAttribute == VKTS_ATTRIBUTE_TANGENT)
     	    {
@@ -238,11 +326,6 @@ std::string VKTS_APIENTRY shaderFactoryCreate(const std::string& directory, cons
     	    	{
     	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec4 in_tangent;";
     	    		locationIn++;
-
-    	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec3 out_tangent;";
-    	    		locationOut++;
-    	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec3 out_bitangent;";
-    	    		locationOut++;
     	    	}
     	    	else
     	    	{
@@ -250,7 +333,10 @@ std::string VKTS_APIENTRY shaderFactoryCreate(const std::string& directory, cons
     	    		locationIn++;
     	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec3 in_bitangent;";
     	    		locationIn++;
+    	    	}
 
+    	    	if (shaderStage != VK_SHADER_STAGE_FRAGMENT_BIT)
+    	    	{
     	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec3 out_tangent;";
     	    		locationOut++;
     	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec3 out_bitangent;";
@@ -259,35 +345,48 @@ std::string VKTS_APIENTRY shaderFactoryCreate(const std::string& directory, cons
     	    }
     	    else if (currentAttribute == VKTS_ATTRIBUTE_TEXCOORD_0)
     	    {
-	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec2 in_texcoord_0;";
-	    		locationIn++;
+				attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec2 in_texcoord_0;";
+				locationIn++;
 
-	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec2 out_texcoord_0;";
-	    		locationOut++;
+				if (shaderStage != VK_SHADER_STAGE_FRAGMENT_BIT)
+    	    	{
+					attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec2 out_texcoord_0;";
+					locationOut++;
+    	    	}
     	    }
     	    else if (currentAttribute == VKTS_ATTRIBUTE_TEXCOORD_1)
     	    {
 	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec2 in_texcoord_1;";
 	    		locationIn++;
 
-	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec2 out_texcoord_1;";
-	    		locationOut++;
+	    		if (shaderStage != VK_SHADER_STAGE_FRAGMENT_BIT)
+    	    	{
+    	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec2 out_texcoord_1;";
+    	    		locationOut++;
+    	    	}
     	    }
     	    else if (currentAttribute == VKTS_ATTRIBUTE_COLOR_0)
     	    {
 	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec4 in_color_0;";
 	    		locationIn++;
 
-	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec4 out_color_0;";
-	    		locationOut++;
+	    		if (shaderStage != VK_SHADER_STAGE_FRAGMENT_BIT)
+    	    	{
+    	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec4 out_color_0;";
+    	    		locationOut++;
+    	    	}
     	    }
     	    else if (currentAttribute == VKTS_ATTRIBUTE_COLOR_1)
     	    {
 	    		attributesIn += "layout (location = " + std::to_string(locationIn) + ") in vec4 in_color_1;";
 	    		locationIn++;
 
-	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec4 out_color_1;";
-	    		locationOut++;
+	    		if (shaderStage != VK_SHADER_STAGE_FRAGMENT_BIT)
+    	    	{
+
+    	    		attributesOut += "layout (location = " + std::to_string(locationOut) + ") out vec4 out_color_1;";
+    	    		locationOut++;
+    	    	}
     	    }
     	    else if (currentAttribute == VKTS_ATTRIBUTE_JOINTS_0)
     	    {
@@ -336,7 +435,18 @@ std::string VKTS_APIENTRY shaderFactoryCreate(const std::string& directory, cons
     	return "";
     }
 
-    // TODO: Main.
+    // Main.
+	if (renderer == VKTS_RENDERER_FORWARD)
+	{
+		if (!shaderFactoryResolveMainForward(shader, directory, material))
+		{
+			return "";
+		}
+	}
+	else // VKTS_RENDERER_DEFERRED
+	{
+		// TODO: Resolve main for deferred rendering.
+	}
 
     //
 
