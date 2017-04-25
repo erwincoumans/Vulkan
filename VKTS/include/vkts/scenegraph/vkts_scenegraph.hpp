@@ -27,8 +27,6 @@
 #ifndef VKTS_SCENEGRAPH_HPP_
 #define VKTS_SCENEGRAPH_HPP_
 
-// TODO: Implement voxel global illumination in Example 11.
-
 /**
  *
  * Depends on VKTS entity and Vulkan object.
@@ -122,8 +120,6 @@ typedef enum VkTsInterpolator_
 #include <vkts/scenegraph/scene/ICamera.hpp>
 
 #include <vkts/scenegraph/scene/ILight.hpp>
-
-#include <vkts/scenegraph/scene/IParticleSystem.hpp>
 
 #include <vkts/scenegraph/scene/IMesh.hpp>
 

@@ -79,9 +79,6 @@ private:
 
     int32_t currentAnimation;
 
-    SmartPointerVector<IParticleSystemSP> allParticleSystems;
-    Vector<uint32_t> allParticleSystemSeeds;
-
     IBufferObjectSP transformUniformBuffer;
 
     IBufferObjectSP jointsUniformBuffer;
@@ -225,19 +222,6 @@ public:
     virtual int32_t getCurrentAnimation() const override;
 
     virtual void setCurrentAnimation(const int32_t currentAnimation) override;
-
-
-    virtual void addParticleSystem(const IParticleSystemSP& particleSystem) override;
-
-    virtual VkBool32 removeParticleSystem(const IParticleSystemSP& particleSystem) override;
-
-    virtual uint32_t getNumberParticleSystems() const override;
-
-    virtual const SmartPointerVector<IParticleSystemSP>& getParticleSystems() const override;
-
-    virtual VkBool32 setParticleSystemSeed(const IParticleSystemSP& particleSystem, const uint32_t seed) override;
-
-    virtual uint32_t getParticleSystemSeed(const IParticleSystemSP& particleSystem) const override;
 
 
     virtual VkBool32 getDirty() const override;

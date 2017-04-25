@@ -213,7 +213,7 @@ VkBool32 Example::buildCmdBuffer(const int32_t usedBuffer)
 
 	voxelTexture[usedBuffer]->getImage()->cmdPipelineBarrier(cmdBuffer[usedBuffer]->getCommandBuffer(), VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, voxelSubresourceRange);
 
-	// TODO: Continue with voxel cone tracing.
+	// TODO: Generate clip maps.
 
 	//
 

@@ -15,6 +15,7 @@ The tools etc. are used to develop VKTS and the Vulkan examples.
 - [ImageMagick](https://www.imagemagick.org/)
 - [LunarG Vulkan SDK](https://vulkan.lunarg.com/)
 - [MinGW-w64 - for 32 and 64 bit Windows](https://sourceforge.net/projects/mingw-w64/)
+- [Nuklear](https://github.com/vurtun/nuklear/)
 - [Python](https://www.python.org/)
 - [stb](https://github.com/nothings/stb/)
 - [UMLet](http://www.umlet.com/)

@@ -1772,87 +1772,6 @@ def saveMaterials(context, filepath, texturesLibraryName, imagesLibraryName, use
 
     return allEnvironmentTextures
 
-def saveParticleSystems(context, filepath):
-    
-    particleSystems = {}
-
-    # Gather all particles.
-    for currentObject in context.scene.objects:
-        currentParticleSystems = currentObject.particle_systems.values()
-
-        if len(currentParticleSystems) > 0:
-            for currentParticleSystem in currentParticleSystems:
-                particleSystems.setdefault(currentParticleSystem.settings)
-
-    file = open(filepath, "w", encoding="utf8", newline="\n")
-    fw = file.write
-    fw("#\n")
-    fw("# VulKan ToolS particle systems.\n")
-    fw("#\n")
-    fw("\n")
-
-    for currentParticleSystem in particleSystems:
-        # Note: Not all parameters are exported.
-
-        # Emit form volume is not exported.
-        if currentParticleSystem.emit_from == 'VOLUME':
-            continue
-
-        # Only newtonian physics are exported.
-        if currentParticleSystem.physics_type != 'NEWTON':
-            continue
-
-        # Only billboard and object render types are exported.
-        if currentParticleSystem.render_type != 'BILLBOARD' and currentParticleSystem.render_type != 'OBJECT':
-            continue
-
-        if currentParticleSystem.render_type == 'OBJECT' and not currentParticleSystem.dupli_object:
-            continue
-
-        emitFrom = 'Vertices'
-        if currentParticleSystem.emit_from == 'FACE':
-            emitFrom = 'Faces'
-
-        fw("#\n")
-        fw("# Particle system.\n")
-        fw("#\n")
-        fw("\n")        
-        fw("name %s\n" % (currentParticleSystem.name))
-        fw("\n")        
-        fw("emission_number %d\n" % (currentParticleSystem.count))
-        fw("emission_start %f\n" % (currentParticleSystem.frame_start / context.scene.render.fps))
-        fw("emission_end %f\n" % (currentParticleSystem.frame_end / context.scene.render.fps))
-        fw("emission_lifetime %f\n" % (currentParticleSystem.lifetime / context.scene.render.fps))
-        fw("emission_random %f\n" % (currentParticleSystem.lifetime_random))
-        fw("emission_emit_from %s\n" % (emitFrom))
-        # Rest of emission parameters not exported.
-        fw("\n")
-        fw("velocity_normal_factor %f\n" % (currentParticleSystem.normal_factor))
-        # Velocity tangent parameters not exported.
-        fw("velocity_object_align_factor %f %f %f\n" % (convertLocation(currentParticleSystem.object_align_factor)))
-        # Velocity object factor not exported.
-        fw("velocity_factor_random %f\n" % (currentParticleSystem.factor_random))
-        fw("\n")
-        fw("physics_particle_size %f\n" % (currentParticleSystem.particle_size))
-        fw("physics_size_random %f\n" % (currentParticleSystem.size_random))
-        fw("physics_mass %f\n" % (currentParticleSystem.mass))
-        multiplySizeMass = 0.0
-        if currentParticleSystem.use_multiply_size_mass:
-            multiplySizeMass = 1.0
-        fw("physics_multiply_size_mass %f\n" % (multiplySizeMass))
-        # Rest of physics parameters not exported.
-        fw("\n")
-        renderType = 'Billboard'
-        if currentParticleSystem.render_type == 'OBJECT':
-            renderType = 'Object'
-        fw("render_type %s\n" % (renderType))            
-        if currentParticleSystem.dupli_object and currentParticleSystem.render_type == 'OBJECT':
-            fw("render_object %s\n" % (friendlyName(currentParticleSystem.dupli_object.name)))
-        # Rest of render not exported.
-
-        fw("\n")
-
-    file.close()
 
 def saveCameras(context, filepath):
     
@@ -2501,14 +2420,6 @@ def saveNode(context, fw, fw_animation, fw_channel, currentObject):
     fw("layers %x\n" % (layers))             
     fw("\n")
 
-    particleSystems = currentObject.particle_systems.values()
-    if len(particleSystems) > 0:
-        for currentParticleSystem in particleSystems:
-            fw("particle_system %s\n" % (currentParticleSystem.settings.name))
-
-        fw("seed %d\n" % (currentParticleSystem.seed))
-        fw("\n")
-
     if len(currentObject.constraints) > 0:
         for currentConstraint in currentObject.constraints:
             writeData = False
@@ -2608,7 +2519,7 @@ def saveNode(context, fw, fw_animation, fw_channel, currentObject):
     
     return
 
-def saveObjects(context, filepath, meshLibraryName, animationLibraryName, channelLibraryName, particleSystemLibraryName, lightLibraryName, cameraLibraryName):
+def saveObjects(context, filepath, meshLibraryName, animationLibraryName, channelLibraryName, lightLibraryName, cameraLibraryName):
 
     channelLibraryFilepath = os.path.dirname(filepath) + "/" + channelLibraryName
 
@@ -2647,10 +2558,6 @@ def saveObjects(context, filepath, meshLibraryName, animationLibraryName, channe
 
     if lightLibraryName is not None:
         fw("light_library %s\n" % friendlyName(lightLibraryName))
-        fw("\n")
-
-    if particleSystemLibraryName is not None:
-        fw("particle_system_library %s\n" % friendlyName(particleSystemLibraryName))
         fw("\n")
 
     if meshLibraryName is not None:
@@ -2750,14 +2657,6 @@ def save(operator,
 
     #
 
-    particleSystemLibraryName = bpy.path.basename(sceneFilepath).replace(".vkts", "_particles.vkts")
-
-    particleSystemLibraryFilepath = os.path.dirname(sceneFilepath) + "/" + particleSystemLibraryName
-
-    saveParticleSystems(context, particleSystemLibraryFilepath)
-
-    #
-
     camerasLibraryName = bpy.path.basename(sceneFilepath).replace(".vkts", "_cameras.vkts")
 
     camerasLibraryFilepath = os.path.dirname(sceneFilepath) + "/" + camerasLibraryName
@@ -2797,7 +2696,7 @@ def save(operator,
     
     objectLibraryFilepath = os.path.dirname(sceneFilepath) + "/" + objectLibraryName
 
-    saveObjects(context, objectLibraryFilepath, meshLibraryName, animationLibraryName, channelLibraryName, particleSystemLibraryName, lightsLibraryName, camerasLibraryName)
+    saveObjects(context, objectLibraryFilepath, meshLibraryName, animationLibraryName, channelLibraryName, lightsLibraryName, camerasLibraryName)
 
     #
     

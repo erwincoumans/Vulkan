@@ -46,8 +46,6 @@ protected:
 
     SmartPointerMap<std::string, ILightSP> allLights;
 
-    SmartPointerMap<std::string, IParticleSystemSP> allParticleSystems;
-
     SmartPointerMap<std::string, IMeshSP> allMeshes;
 
     SmartPointerMap<std::string, ISubMeshSP> allSubMeshes;
@@ -154,16 +152,6 @@ public:
     virtual VkBool32 removeLight(const ILightSP& light) override;
 
     virtual const SmartPointerMap<std::string, ILightSP>& getAllLights() const override;
-
-    //
-
-    virtual IParticleSystemSP useParticleSystem(const std::string& name) const override;
-
-    virtual VkBool32 addParticleSystem(const IParticleSystemSP& particleSystem) override;
-
-    virtual VkBool32 removeParticleSystem(const IParticleSystemSP& particleSystem) override;
-
-    virtual const SmartPointerMap<std::string, IParticleSystemSP>& getAllParticleSystems() const override;
 
     //
 

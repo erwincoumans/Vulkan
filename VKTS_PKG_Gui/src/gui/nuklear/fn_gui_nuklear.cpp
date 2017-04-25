@@ -6,7 +6,7 @@
  * Copyright (c) since 2014 Norbert Nopper
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
+ * of this software and associated doisReplacumentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
@@ -24,60 +24,19 @@
  * THE SOFTWARE.
  */
 
-#ifndef VKTS_GUI_HPP_
-#define VKTS_GUI_HPP_
+#include <vkts/gui/vkts_gui.hpp>
 
-/**
- *
- * Depends on VKTS Vulkan object.
- *
- */
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
+#define NK_IMPLEMENTATION
+#include <nuklear/nuklear.h>
 
-#include <vkts/vulkan/composition/vkts_composition.hpp>
-
-/**
- *
- * VKTS Start.
- *
- */
-
-/**
- * Font.
- */
-
-#include <vkts/gui/font/IChar.hpp>
-
-#include <vkts/gui/font/IRenderFont.hpp>
-#include <vkts/gui/font/IFont.hpp>
-
-/**
- * Nuklear Gui.
- */
-
-#include <vkts/gui/nuklear/fn_gui_nuklear.hpp>
-
-/**
- * Gui manager.
- */
-
-#include <vkts/gui/manager/IGuiManager.hpp>
-
-#include <vkts/gui/manager/fn_gui_manager.hpp>
-
-
-/**
- * Gui factory.
- */
-
-#include <vkts/gui/factory/IGuiRenderFactory.hpp>
-#include <vkts/gui/factory/IGuiFactory.hpp>
-
-#include <vkts/gui/factory/fn_gui_factory.hpp>
-
-/**
- * Font load.
- */
-
-#include <vkts/gui/load/fn_load_font.hpp>
-
-#endif /* VKTS_GUI_HPP_ */
+namespace vkts
+{
+	// TODO: Implement.
+}

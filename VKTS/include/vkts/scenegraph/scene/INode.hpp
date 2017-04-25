@@ -165,19 +165,6 @@ public:
     virtual void setCurrentAnimation(const int32_t currentAnimation) = 0;
 
 
-    virtual void addParticleSystem(const IParticleSystemSP& particleSystem) = 0;
-
-    virtual VkBool32 removeParticleSystem(const IParticleSystemSP& particleSystem) = 0;
-
-    virtual uint32_t getNumberParticleSystems() const = 0;
-
-    virtual const SmartPointerVector<IParticleSystemSP>& getParticleSystems() const = 0;
-
-    virtual VkBool32 setParticleSystemSeed(const IParticleSystemSP& particleSystem, const uint32_t seed) = 0;
-
-    virtual uint32_t getParticleSystemSeed(const IParticleSystemSP& particleSystem) const = 0;
-
-
     virtual VkBool32 getDirty() const = 0;
 
     virtual void setDirty(const VkBool32 dirty = VK_TRUE) = 0;

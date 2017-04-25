@@ -24,60 +24,31 @@
  * THE SOFTWARE.
  */
 
-#ifndef VKTS_GUI_HPP_
-#define VKTS_GUI_HPP_
+#ifndef VKTS_FN_GUI_NUKLEAR_HPP_
+#define VKTS_FN_GUI_NUKLEAR_HPP_
 
 /**
  *
- * Depends on VKTS Vulkan object.
+ * Nuklear Library.
+ * https://github.com/vurtun/nuklear/
  *
  */
 
-#include <vkts/vulkan/composition/vkts_composition.hpp>
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
+//
+#include <nuklear/nuklear.h>
 
-/**
- *
- * VKTS Start.
- *
- */
+#include <vkts/gui/vkts_gui.hpp>
 
-/**
- * Font.
- */
+namespace vkts
+{
+	// TODO: Implement.
+}
 
-#include <vkts/gui/font/IChar.hpp>
-
-#include <vkts/gui/font/IRenderFont.hpp>
-#include <vkts/gui/font/IFont.hpp>
-
-/**
- * Nuklear Gui.
- */
-
-#include <vkts/gui/nuklear/fn_gui_nuklear.hpp>
-
-/**
- * Gui manager.
- */
-
-#include <vkts/gui/manager/IGuiManager.hpp>
-
-#include <vkts/gui/manager/fn_gui_manager.hpp>
-
-
-/**
- * Gui factory.
- */
-
-#include <vkts/gui/factory/IGuiRenderFactory.hpp>
-#include <vkts/gui/factory/IGuiFactory.hpp>
-
-#include <vkts/gui/factory/fn_gui_factory.hpp>
-
-/**
- * Font load.
- */
-
-#include <vkts/gui/load/fn_load_font.hpp>
-
-#endif /* VKTS_GUI_HPP_ */
+#endif /* VKTS_FN_GUI_NUKLEAR_HPP_ */

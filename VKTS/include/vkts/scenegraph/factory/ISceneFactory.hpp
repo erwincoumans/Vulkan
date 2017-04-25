@@ -73,8 +73,6 @@ public:
 
     virtual ILightSP createLight(const ISceneManagerSP& sceneManager) = 0;
 
-    virtual IParticleSystemSP createParticleSystem(const ISceneManagerSP& sceneManager) = 0;
-
     //
 
     virtual IConstraintSP createCopyConstraint(const ISceneManagerSP& sceneManager, const enum CopyConstraintType copyConstraintType) = 0;

@@ -77,9 +77,6 @@ void Node::reset()
 
     currentAnimation = -1;
 
-    allParticleSystems.clear();
-    allParticleSystemSeeds.clear();
-
     transformUniformBuffer = IBufferObjectSP();
 
     jointsUniformBuffer = IBufferObjectSP();
@@ -101,7 +98,7 @@ void Node::reset()
 }
 
 Node::Node() :
-    INode(), name(""), parentNode(), translate(0.0f, 0.0f, 0.0f), nodeRotationMode(VKTS_EULER_XZY), rotate(0.0f, 0.0f, 0.0f), scale(1.0f, 1.0f, 1.0f), finalTranslate(0.0f, 0.0f, 0.0f), finalRotate(0.0f, 0.0f, 0.0f), finalScale(1.0f, 1.0f, 1.0f), transformMatrix(1.0f), transformMatrixDirty(), jointIndex(-1), joints(0), bindTranslate(0.0f, 0.0f, 0.0f), bindRotationMode(VKTS_EULER_XYZ), bindRotate(0.0f, 0.0f,0.0f), bindScale(1.0f, 1.0f, 1.0f), correctionMatrix(1.0f), bindMatrix(1.0f), inverseBindMatrix(1.0f), bindMatrixDirty(), allChildNodes(), allMeshes(), allCameras(), allLights(), allConstraints(), allAnimations(), currentAnimation(-1), allParticleSystems(), allParticleSystemSeeds(), transformUniformBuffer(), jointsUniformBuffer(), box(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)), layers(0x01), nodeData()
+    INode(), name(""), parentNode(), translate(0.0f, 0.0f, 0.0f), nodeRotationMode(VKTS_EULER_XZY), rotate(0.0f, 0.0f, 0.0f), scale(1.0f, 1.0f, 1.0f), finalTranslate(0.0f, 0.0f, 0.0f), finalRotate(0.0f, 0.0f, 0.0f), finalScale(1.0f, 1.0f, 1.0f), transformMatrix(1.0f), transformMatrixDirty(), jointIndex(-1), joints(0), bindTranslate(0.0f, 0.0f, 0.0f), bindRotationMode(VKTS_EULER_XYZ), bindRotate(0.0f, 0.0f,0.0f), bindScale(1.0f, 1.0f, 1.0f), correctionMatrix(1.0f), bindMatrix(1.0f), inverseBindMatrix(1.0f), bindMatrixDirty(), allChildNodes(), allMeshes(), allCameras(), allLights(), allConstraints(), allAnimations(), currentAnimation(-1), transformUniformBuffer(), jointsUniformBuffer(), box(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)), layers(0x01), nodeData()
 
 {
     reset();
@@ -266,11 +263,6 @@ Node::Node(const Node& other) :
     }
 
     currentAnimation = other.currentAnimation;
-
-    //
-
-    allParticleSystems = other.allParticleSystems;
-    allParticleSystemSeeds = other.allParticleSystemSeeds;
 
     //
 
@@ -668,71 +660,6 @@ void Node::setCurrentAnimation(const int32_t currentAnimation)
 	{
 		this->currentAnimation = -1;
 	}
-}
-
-
-void Node::addParticleSystem(const IParticleSystemSP& particleSystem)
-{
-	uint32_t index = allParticleSystems.index(particleSystem);
-
-	if (index < allParticleSystems.size())
-	{
-		return;
-	}
-
-	allParticleSystems.append(particleSystem);
-	allParticleSystemSeeds.append(0);
-}
-
-VkBool32 Node::removeParticleSystem(const IParticleSystemSP& particleSystem)
-{
-	uint32_t index = allParticleSystems.index(particleSystem);
-
-	if (index == allParticleSystems.size())
-	{
-		return VK_FALSE;
-	}
-
-	allParticleSystems.removeAt(index);
-	allParticleSystemSeeds.removeAt(index);
-
-    return allParticleSystemSeeds.removeAt(index);
-}
-
-uint32_t Node::getNumberParticleSystems() const
-{
-	return allParticleSystems.size();
-}
-
-const SmartPointerVector<IParticleSystemSP>& Node::getParticleSystems() const
-{
-	return allParticleSystems;
-}
-
-VkBool32 Node::setParticleSystemSeed(const IParticleSystemSP& particleSystem, const uint32_t seed)
-{
-	uint32_t index = allParticleSystems.index(particleSystem);
-
-	if (index == allParticleSystems.size())
-	{
-		return VK_FALSE;
-	}
-
-	allParticleSystemSeeds[index] = seed;
-
-	return VK_TRUE;
-}
-
-uint32_t Node::getParticleSystemSeed(const IParticleSystemSP& particleSystem) const
-{
-	uint32_t index = allParticleSystems.index(particleSystem);
-
-	if (index == allParticleSystems.size())
-	{
-		return 0;
-	}
-
-	return allParticleSystemSeeds[index];
 }
 
 VkBool32 Node::getDirty() const
@@ -1499,9 +1426,6 @@ void Node::destroy()
 	        allAnimations[i]->destroy();
 	    }
 	    allAnimations.clear();
-
-	    allParticleSystems.clear();
-	    allParticleSystemSeeds.clear();
 
 	    for (uint32_t i = 0; i < nodeData.size(); i++)
 	    {

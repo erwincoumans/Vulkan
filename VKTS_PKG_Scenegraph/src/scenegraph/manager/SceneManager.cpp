@@ -30,7 +30,7 @@ namespace vkts
 {
 
 SceneManager::SceneManager(const IAssetManagerSP& assetManager) :
-    ISceneManager(), assetManager(assetManager), allObjects(), allCameras(), allLights(), allParticleSystems(), allMeshes(), allSubMeshes(), allAnimations(), allChannels(), allBSDFMaterials(), allUsedBSDFMaterials(), allPhongMaterials(), allUsedPhongMaterials()
+    ISceneManager(), assetManager(assetManager), allObjects(), allCameras(), allLights(), allMeshes(), allSubMeshes(), allAnimations(), allChannels(), allBSDFMaterials(), allUsedBSDFMaterials(), allPhongMaterials(), allUsedPhongMaterials()
 {
 }
 
@@ -173,45 +173,6 @@ VkBool32 SceneManager::removeLight(const ILightSP& light)
 const SmartPointerMap<std::string, ILightSP>& SceneManager::getAllLights() const
 {
 	return allLights;
-}
-
-//
-
-IParticleSystemSP SceneManager::useParticleSystem(const std::string& name) const
-{
-	if (!contains(name, allParticleSystems))
-	{
-		return IParticleSystemSP();
-	}
-
-	//
-
-    return get(name, allParticleSystems);
-}
-
-VkBool32 SceneManager::addParticleSystem(const IParticleSystemSP& particleSystem)
-{
-    if (!particleSystem.get())
-    {
-        return VK_FALSE;
-    }
-
-    return add(particleSystem->getName(), particleSystem, allParticleSystems);
-}
-
-VkBool32 SceneManager::removeParticleSystem(const IParticleSystemSP& particleSystem)
-{
-    if (!particleSystem.get())
-    {
-        return VK_FALSE;
-    }
-
-    return remove(particleSystem->getName(), allParticleSystems);
-}
-
-const SmartPointerMap<std::string, IParticleSystemSP>& SceneManager::getAllParticleSystems() const
-{
-	return allParticleSystems;
 }
 
 //
@@ -567,8 +528,6 @@ void SceneManager::destroy()
     allCameras.clear();
 
     allLights.clear();
-
-    allParticleSystems.clear();
 
     allMeshes.clear();
 

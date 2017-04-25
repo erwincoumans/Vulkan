@@ -84,16 +84,6 @@ public:
 
     //
 
-    virtual IParticleSystemSP useParticleSystem(const std::string& name) const = 0;
-
-    virtual VkBool32 addParticleSystem(const IParticleSystemSP& particleSystem) = 0;
-
-    virtual VkBool32 removeParticleSystem(const IParticleSystemSP& particleSystem) = 0;
-
-    virtual const SmartPointerMap<std::string, IParticleSystemSP>& getAllParticleSystems() const = 0;
-
-    //
-
     virtual IMeshSP useMesh(const std::string& name) const = 0;
 
     virtual VkBool32 addMesh(const IMeshSP& mesh) = 0;

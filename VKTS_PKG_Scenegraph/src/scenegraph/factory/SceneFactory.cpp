@@ -38,7 +38,6 @@
 #include "../scene/Node.hpp"
 #include "../scene/Object.hpp"
 #include "../scene/PhongMaterial.hpp"
-#include "../scene/ParticleSystem.hpp"
 #include "../scene/Scene.hpp"
 #include "../scene/SubMesh.hpp"
 
@@ -171,11 +170,6 @@ ICameraSP SceneFactory::createCamera(const ISceneManagerSP& sceneManager)
 ILightSP SceneFactory::createLight(const ISceneManagerSP& sceneManager)
 {
 	return ILightSP(new Light());
-}
-
-IParticleSystemSP SceneFactory::createParticleSystem(const ISceneManagerSP& sceneManager)
-{
-	return IParticleSystemSP(new ParticleSystem());
 }
 
 //
