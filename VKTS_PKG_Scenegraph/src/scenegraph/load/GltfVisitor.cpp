@@ -4158,8 +4158,6 @@ void GltfVisitor::visit(JSONobject& jsonObject)
 	}
 	else if (gltfState == GltfState_Asset)
 	{
-		// FIXME copyright, generator, minVersion
-
 		//
 		// Required
 		//
@@ -4174,6 +4172,47 @@ void GltfVisitor::visit(JSONobject& jsonObject)
 		//
 		//
 
+		if (jsonObject.hasKey("minVersion"))
+		{
+			auto minVersion = jsonObject.getValue("minVersion");
+
+			minVersion->visit(*this);
+
+			if (state.top() == GltfState_Error)
+			{
+				return;
+			}
+
+			//
+
+			std::string majorName = "";
+			std::string minorName = "";
+
+			auto dotIndex = gltfString.find(".");
+
+			if (dotIndex != gltfString.npos)
+			{
+				majorName = gltfString.substr(0, dotIndex);
+				minorName = gltfString.substr(dotIndex + 1);
+			}
+			else
+			{
+				majorName = gltfString;
+				minorName = "0";
+			}
+
+			int32_t majorVersion = (int32_t)atoi(majorName.c_str());
+			int32_t minorVersion = (int32_t)atoi(minorName.c_str());
+
+			if (majorVersion != 2 && minorVersion != 0)
+			{
+				state.push(GltfState_Error);
+				return;
+			}
+		}
+
+		//
+
 		auto version = jsonObject.getValue("version");
 
 		version->visit(*this);
@@ -4186,28 +4225,56 @@ void GltfVisitor::visit(JSONobject& jsonObject)
 		//
 
 		std::string majorName = "";
-		std::string minorName = "";
 
 		auto dotIndex = gltfString.find(".");
 
 		if (dotIndex != gltfString.npos)
 		{
 			majorName = gltfString.substr(0, dotIndex);
-			minorName = gltfString.substr(dotIndex + 1);
 		}
 		else
 		{
 			majorName = gltfString;
-			minorName = "0";
 		}
 
 		int32_t majorVersion = (int32_t)atoi(majorName.c_str());
-		int32_t minorVersion = (int32_t)atoi(minorName.c_str());
 
-		if (majorVersion != 2 || minorVersion != 0)
+		if (majorVersion != 2)
 		{
 			state.push(GltfState_Error);
 			return;
+		}
+
+		//
+
+		if (jsonObject.hasKey("copyright"))
+		{
+			auto copyright = jsonObject.getValue("copyright");
+
+			copyright->visit(*this);
+
+			if (state.top() == GltfState_Error)
+			{
+				return;
+			}
+
+			// Not using copyright.
+		}
+
+		//
+
+		if (jsonObject.hasKey("generator"))
+		{
+			auto generator = jsonObject.getValue("generator");
+
+			generator->visit(*this);
+
+			if (state.top() == GltfState_Error)
+			{
+				return;
+			}
+
+			// Not using generator.
 		}
 	}
 	else if (gltfState == GltfState_Buffer)
