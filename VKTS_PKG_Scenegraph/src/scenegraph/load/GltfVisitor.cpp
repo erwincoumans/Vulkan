@@ -1530,7 +1530,7 @@ void GltfVisitor::visitCamera(JSONobject& jsonObject)
 		// Required
 		//
 
-		if (!jsonObject.hasKey("xmag") || !jsonObject.hasKey("ymag") || !jsonObject.hasKey("znear") || !jsonObject.hasKey("far"))
+		if (!jsonObject.hasKey("xmag") || !jsonObject.hasKey("ymag") || !jsonObject.hasKey("znear") || !jsonObject.hasKey("zfar"))
 		{
 			state.push(GltfState_Error);
 			return;
@@ -1568,7 +1568,7 @@ void GltfVisitor::visitCamera(JSONobject& jsonObject)
 			return;
 		}
 
-		if (gltfFloat <= 0.0f)
+		if (gltfFloat <= 0.0f || gltfFloat <= gltfCamera.znear)
 		{
 			state.push(GltfState_Error);
 			return;
