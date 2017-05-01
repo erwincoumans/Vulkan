@@ -109,9 +109,3 @@ VKTS_Test_General - VKTS internal test program, to verify general functions.
 VKTS_Test_Input   - VKTS internal test program, to verify input functions.
   
   
-VKTS presentations:
--------------------
-
-[Khronos Munich Chapter Meeting 04/08/2016](VKTS_Documentation/presentations/Khronos_Chapter_VKTS.pdf) - "VulKan ToolS - Filling the gap between driver and application."
-
-
