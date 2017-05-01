@@ -30,7 +30,7 @@ namespace vkts
 {
 
 GltfVisitor::GltfVisitor(const std::string& directory) :
-	JsonVisitor(), directory(directory), state(), subState(), gltfBool(VK_FALSE), gltfString(), gltfInteger(0), gltfFloat(0.0f), gltfIntegerArray{}, gltfFloatArray{}, arrayIndex(0), arraySize(0), numberArray(VK_FALSE), objectArray(VK_FALSE), gltfExtensions{}, gltfBuffer{}, gltfBufferView{}, gltfSparse{}, gltfSparseIndex{}, gltfSparseValue{} , gltfAccessor{}, gltfPrimitive{}, gltfImage{}, gltfSampler{}, gltfTexture{}, gltfTextureInfo{}, gltfMaterial{}, gltfMesh{}, gltfSkin{}, gltfNode{}, gltfAnimation_Sampler{}, gltfChannel{}, gltfAnimation{}, gltfScene{}, allGltfBuffers(), allGltfBufferViews(), allGltfSparses(), allGltfAccessors(), allGltfImages(), allGltfSamplers(), allGltfTextures(), allGltfMaterials(), allGltfMeshes(), allGltfSkins(), allGltfNodes(), allGltfAnimations(), allGltfScenes(), defaultScene(nullptr)
+	JsonVisitor(), directory(directory), state(), subState(), gltfBool(VK_FALSE), gltfString(), gltfInteger(0), gltfFloat(0.0f), gltfIntegerArray{}, gltfFloatArray{}, arrayIndex(0), arraySize(0), numberArray(VK_FALSE), objectArray(VK_FALSE), gltfExtensions{}, gltfBuffer{}, gltfBufferView{}, gltfSparse{}, gltfSparseIndex{}, gltfSparseValue{} , gltfAccessor{}, gltfPrimitive{}, gltfImage{}, gltfSampler{}, gltfTexture{}, gltfTextureInfo{}, gltfMaterial{}, gltfMesh{}, gltfCamera{}, gltfSkin{}, gltfNode{}, gltfAnimation_Sampler{}, gltfChannel{}, gltfAnimation{}, gltfScene{}, allGltfBuffers(), allGltfBufferViews(), allGltfSparses(), allGltfAccessors(), allGltfImages(), allGltfSamplers(), allGltfTextures(), allGltfMaterials(), allGltfMeshes(), allGltfCameras(), allGltfSkins(), allGltfNodes(), allGltfAnimations(), allGltfScenes(), defaultScene(nullptr)
 {
 }
 
@@ -1489,6 +1489,237 @@ void GltfVisitor::visitMesh(JSONobject& jsonObject)
 	}
 }
 
+void GltfVisitor::visitCamera(JSONobject& jsonObject)
+{
+	//
+	// Required
+	//
+
+	if (!jsonObject.hasKey("type"))
+	{
+		state.push(GltfState_Error);
+		return;
+	}
+
+	//
+	//
+	//
+
+	auto type = jsonObject.getValue("type");
+
+	type->visit(*this);
+
+	if (state.top() == GltfState_Error)
+	{
+		return;
+	}
+
+	if (gltfString != "orthographic" && gltfString == "perspective")
+	{
+		state.push(GltfState_Error);
+		return;
+	}
+
+	gltfCamera.type = gltfString;
+
+	//
+
+	if (gltfCamera.type == "orthographic")
+	{
+		//
+		// Required
+		//
+
+		if (!jsonObject.hasKey("xmag") || !jsonObject.hasKey("ymag") || !jsonObject.hasKey("znear") || !jsonObject.hasKey("far"))
+		{
+			state.push(GltfState_Error);
+			return;
+		}
+
+		//
+		//
+		//
+
+		auto znear = jsonObject.getValue("znear");
+
+		znear->visit(*this);
+
+		if (state.top() == GltfState_Error)
+		{
+			return;
+		}
+
+		if (gltfFloat <= 0.0f)
+		{
+			state.push(GltfState_Error);
+			return;
+		}
+
+		gltfCamera.znear = gltfFloat;
+
+		//
+
+		auto zfar = jsonObject.getValue("zfar");
+
+		zfar->visit(*this);
+
+		if (state.top() == GltfState_Error)
+		{
+			return;
+		}
+
+		if (gltfFloat <= 0.0f)
+		{
+			state.push(GltfState_Error);
+			return;
+		}
+
+		gltfCamera.zfar = gltfFloat;
+
+		//
+
+		auto xmag = jsonObject.getValue("xmag");
+
+		xmag->visit(*this);
+
+		if (state.top() == GltfState_Error)
+		{
+			return;
+		}
+
+		gltfCamera.orthograpic.xmag = gltfFloat;
+
+		//
+
+		auto ymag = jsonObject.getValue("ymag");
+
+		ymag->visit(*this);
+
+		if (state.top() == GltfState_Error)
+		{
+			return;
+		}
+
+		gltfCamera.orthograpic.ymag = gltfFloat;
+	}
+	else
+	{
+		//
+		// Required
+		//
+
+		if (!jsonObject.hasKey("yfov") || !jsonObject.hasKey("znear"))
+		{
+			state.push(GltfState_Error);
+			return;
+		}
+
+		//
+		//
+		//
+
+		auto yfov = jsonObject.getValue("yfov");
+
+		yfov->visit(*this);
+
+		if (state.top() == GltfState_Error)
+		{
+			return;
+		}
+
+		if (gltfFloat <= 0.0f)
+		{
+			state.push(GltfState_Error);
+			return;
+		}
+
+		gltfCamera.perspective.yfov = gltfFloat;
+
+		//
+
+		auto znear = jsonObject.getValue("znear");
+
+		znear->visit(*this);
+
+		if (state.top() == GltfState_Error)
+		{
+			return;
+		}
+
+		if (gltfFloat <= 0.0f)
+		{
+			state.push(GltfState_Error);
+			return;
+		}
+
+		gltfCamera.znear = gltfFloat;
+
+		//
+
+		if (jsonObject.hasKey("zfar"))
+		{
+			auto zfar = jsonObject.getValue("zfar");
+
+			zfar->visit(*this);
+
+			if (state.top() == GltfState_Error)
+			{
+				return;
+			}
+
+			if (gltfFloat <= 0.0f || gltfFloat <= gltfCamera.znear)
+			{
+				state.push(GltfState_Error);
+				return;
+			}
+
+			gltfCamera.zfar = gltfFloat;
+		}
+		else
+		{
+			gltfCamera.perspective.infinite = VK_TRUE;
+		}
+
+		//
+
+		if (jsonObject.hasKey("aspectRatio"))
+		{
+			auto aspectRatio = jsonObject.getValue("aspectRatio");
+
+			aspectRatio->visit(*this);
+
+			if (state.top() == GltfState_Error)
+			{
+				return;
+			}
+
+			if (gltfFloat <= 0.0f)
+			{
+				state.push(GltfState_Error);
+				return;
+			}
+
+			gltfCamera.perspective.aspectRatio = gltfFloat;
+		}
+	}
+
+	//
+
+	if (jsonObject.hasKey("name"))
+	{
+		auto name = jsonObject.getValue("name");
+
+		name->visit(*this);
+
+		if (state.top() == GltfState_Error)
+		{
+			return;
+		}
+
+		gltfCamera.name = gltfString;
+	}
+}
+
 void GltfVisitor::visitSkin(JSONobject& jsonObject)
 {
 	//
@@ -1577,7 +1808,7 @@ void GltfVisitor::visitSkin(JSONobject& jsonObject)
 
 void GltfVisitor::visitNode(JSONobject& jsonObject)
 {
-	// FIXME camera, weights
+	// FIXME weights
 
 	//
 	// Dependencies.
@@ -1616,6 +1847,28 @@ void GltfVisitor::visitNode(JSONobject& jsonObject)
 		}
 
 		state.pop();
+	}
+
+	//
+
+	if (jsonObject.hasKey("camera"))
+	{
+		auto camera = jsonObject.getValue("camera");
+
+		camera->visit(*this);
+
+		if (state.top() == GltfState_Error)
+		{
+			return;
+		}
+
+		if (allGltfCameras.size() <= (uint32_t)gltfInteger)
+		{
+			state.push(GltfState_Error);
+			return;
+		}
+
+		gltfNode.camera = &(allGltfCameras[gltfInteger]);
 	}
 
 	//
@@ -2386,8 +2639,6 @@ void GltfVisitor::visitMesh_Primitive(JSONobject& jsonObject)
 
 void GltfVisitor::visitMesh_Primitive_Attributes(JSONobject& jsonObject)
 {
-	// FIXME COLOR_0
-
 	//
 	// Required
 	//
@@ -3156,6 +3407,39 @@ void GltfVisitor::visit(JSONarray& jsonArray)
 				allGltfMeshes.append(gltfMesh);
 			}
 		}
+		else if (gltfState == GltfState_Cameras)
+		{
+			for (int32_t i = 0; i < (int32_t)jsonArray.size(); i++)
+			{
+				gltfCamera.orthograpic.xmag = 0.0f;
+				gltfCamera.orthograpic.ymag = 0.0f;
+
+				gltfCamera.perspective.aspectRatio = 1.0f;
+				gltfCamera.perspective.yfov = 0.0f;
+				gltfCamera.perspective.infinite = VK_FALSE;
+
+				gltfCamera.znear = 0.0f;
+				gltfCamera.zfar = 0.0f;
+				gltfCamera.type = "";
+				gltfCamera.name = "Camera_" + std::to_string(i);
+
+				//
+
+				state.push(GltfState_Camera);
+				jsonArray.getValueAt(i)->visit(*this);
+
+				if (state.top() == GltfState_Error)
+				{
+					return;
+				}
+
+				state.pop();
+
+				//
+
+				allGltfCameras.append(gltfCamera);
+			}
+		}
 		else if (gltfState == GltfState_Skins)
 		{
 			for (int32_t i = 0; i < (int32_t)jsonArray.size(); i++)
@@ -3187,6 +3471,7 @@ void GltfVisitor::visit(JSONarray& jsonArray)
 			for (int32_t i = 0; i < (int32_t)jsonArray.size(); i++)
 			{
 				gltfNode.children.clear();
+				gltfNode.camera = nullptr;
 				gltfNode.skin = nullptr;
 				gltfNode.name = "Node_" + std::to_string(i);
 
@@ -3488,8 +3773,6 @@ void GltfVisitor::visit(JSONobject& jsonObject)
 	}
 	else if (gltfState == GltfState_Start)
 	{
-		// FIXME cameras
-
 		//
 		// Required
 		//
@@ -3738,6 +4021,27 @@ void GltfVisitor::visit(JSONobject& jsonObject)
 
 		//
 
+		if (jsonObject.hasKey("cameras"))
+		{
+			objectArray = VK_TRUE;
+
+			auto cameras = jsonObject.getValue("cameras");
+
+			state.push(GltfState_Cameras);
+			cameras->visit(*this);
+
+			objectArray = VK_FALSE;
+
+			if (state.top() == GltfState_Error)
+			{
+				return;
+			}
+
+			state.pop();
+		}
+
+		//
+
 		if (jsonObject.hasKey("skins"))
 		{
 			objectArray = VK_TRUE;
@@ -3937,6 +4241,10 @@ void GltfVisitor::visit(JSONobject& jsonObject)
 	else if (gltfState == GltfState_Mesh)
 	{
 		visitMesh(jsonObject);
+	}
+	else if (gltfState == GltfState_Camera)
+	{
+		visitCamera(jsonObject);
 	}
 	else if (gltfState == GltfState_Skin)
 	{

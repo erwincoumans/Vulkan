@@ -59,6 +59,7 @@ enum GltfState {
 	GltfState_Textures,
 	GltfState_Materials,
 	GltfState_Meshes,
+	GltfState_Cameras,
 	GltfState_Skins,
 	GltfState_Nodes,
 	GltfState_Animations,
@@ -72,6 +73,7 @@ enum GltfState {
 	GltfState_Texture,
 	GltfState_Material,
 	GltfState_Mesh,
+	GltfState_Camera,
 	GltfState_Skin,
 	GltfState_Node,
 	GltfState_Animation,
@@ -237,6 +239,28 @@ typedef struct _GltfMesh {
 
 struct _GltfNode;
 
+typedef struct _GltfOrthograpicCamera {
+	float xmag;
+	float ymag;
+} GltfOrthograpicCamera;
+
+typedef struct _GltfPerspectiveCamera {
+	float aspectRatio;
+	float yfov;
+	//
+	VkBool32 infinite;
+} GltfPerspectiveCamera;
+
+typedef struct _GltfCamera {
+	GltfOrthograpicCamera orthograpic;
+	GltfPerspectiveCamera perspective;
+
+	float zfar;
+	float znear;
+	std::string type;
+	std::string name;
+} GltfCamera;
+
 typedef struct _GltfSkin {
 	Vector<GltfAccessor*> inverseBindMatrices;
 	uint32_t skeleton;
@@ -246,6 +270,7 @@ typedef struct _GltfSkin {
 
 typedef struct _GltfNode {
 	Vector<uint32_t> children;
+	GltfCamera* camera;
 	GltfSkin* skin;
 	float matrix[16];
 	GltfMesh* mesh;
@@ -318,6 +343,7 @@ private:
 	GltfTextureInfo gltfTextureInfo;
 	GltfMaterial gltfMaterial;
 	GltfMesh gltfMesh;
+	GltfCamera gltfCamera;
 	GltfSkin gltfSkin;
 	GltfNode gltfNode;
 	GltfAnimation_Sampler gltfAnimation_Sampler;
@@ -334,6 +360,7 @@ private:
 	Vector<GltfTexture> allGltfTextures;
 	Vector<GltfMaterial> allGltfMaterials;
 	Vector<GltfMesh> allGltfMeshes;
+	Vector<GltfCamera> allGltfCameras;
 	Vector<GltfSkin> allGltfSkins;
 	Vector<GltfNode> allGltfNodes;
 	Vector<GltfAnimation> allGltfAnimations;
@@ -348,6 +375,7 @@ private:
 	void visitTexture(JSONobject& jsonObject);
 	void visitMaterial(JSONobject& jsonObject);
 	void visitMesh(JSONobject& jsonObject);
+	void visitCamera(JSONobject& jsonObject);
 	void visitSkin(JSONobject& jsonObject);
 	void visitNode(JSONobject& jsonObject);
 	void visitAnimation(JSONobject& jsonObject);
