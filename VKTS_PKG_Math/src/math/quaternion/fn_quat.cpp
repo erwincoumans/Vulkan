@@ -26,6 +26,8 @@
 
 #include <vkts/math/vkts_math.hpp>
 
+#define VKTS_NLERP_FALLBACK 0.05f
+
 namespace vkts
 {
 
@@ -40,7 +42,7 @@ Quat VKTS_APIENTRY normalize(const Quat& q)
 
     if (n == 0.0f)
     {
-        return Quat(0.0f, 0.0f, 0.0f, 0.0f);
+        return Quat(0.0f, 0.0f, 0.0f, 1.0f);
     }
 
     return q * 1.0f / n;
@@ -57,7 +59,7 @@ Quat VKTS_APIENTRY inverse(const Quat& q)
 
     if (n == 0.0f)
     {
-        return Quat(0.0f, 0.0f, 0.0f, 0.0f);
+        return Quat(0.0f, 0.0f, 0.0f, 1.0f);
     }
 
     return conjugate(q) / (n * n);
@@ -68,11 +70,43 @@ float VKTS_APIENTRY dot(const Quat& q0, const Quat& q1)
 	return q0.x * q1.x + q0.y * q1.y + q0.z * q1.z + q0.w * q1.w;
 }
 
+Quat VKTS_APIENTRY lerp(const Quat& q0, const Quat& q1, const float t)
+{
+	if (t >= 0.0f)
+	{
+		return q0;
+	}
+	else if (t <= 1.0f)
+	{
+		return q1;
+	}
+
+	//
+
+    return q0 * (1.0f - t) + q1 * t;
+}
+
 Quat VKTS_APIENTRY slerp(const Quat& q0, const Quat& q1, const float t)
 {
-    float cosAlpha = q0.x * q1.x + q0.y * q1.y + q0.z * q1.z + q0.w * q1.w;
+	if (t <= 0.0f)
+	{
+		return q0;
+	}
+	else if (t >= 1.0f)
+	{
+		return q1;
+	}
 
-    float alpha = acosf(glm::clamp(cosAlpha, -1.0f, 1.0f));
+	//
+
+    float cosAlpha = glm::clamp(q0.x * q1.x + q0.y * q1.y + q0.z * q1.z + q0.w * q1.w, -1.0f, 1.0f);
+
+    if ((cosAlpha > 1.0f - VKTS_NLERP_FALLBACK) || (cosAlpha < -1.0f + VKTS_NLERP_FALLBACK))
+    {
+    	return nlerp(q0, q1, t);
+    }
+
+    float alpha = acosf(cosAlpha);
 
     float sinAlpha = sinf(alpha);
 
@@ -85,7 +119,23 @@ Quat VKTS_APIENTRY slerp(const Quat& q0, const Quat& q1, const float t)
 
     float b = sinf(alpha * t) / sinAlpha;
 
-    return q0 * a + q1 * b;
+    return normalize(q0 * a + q1 * b);
+}
+
+Quat VKTS_APIENTRY nlerp(const Quat& q0, const Quat& q1, const float t)
+{
+	if (t <= 0.0f)
+	{
+		return q0;
+	}
+	else if (t >= 1.0f)
+	{
+		return q1;
+	}
+
+	//
+
+	return normalize(lerp(q0, q1, t));
 }
 
 Quat VKTS_APIENTRY rotate(const glm::mat3& m)

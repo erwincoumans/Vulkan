@@ -33,15 +33,36 @@ namespace vkts
 
 static VkBool32 g_cacheEnabled = VK_TRUE;
 
+static std::string VKTS_APIENTRY cacheGetRelativeFilename(const char* filename)
+{
+	if (!filename)
+	{
+		return "";
+	}
+
+	std::string testFilename(filename);
+	std::string baseDirectory(fileGetBaseDirectory());
+
+	auto index = testFilename.find(baseDirectory);
+
+	if (index == testFilename.npos || index > 0)
+	{
+		return filename;
+	}
+
+	index += baseDirectory.size();
+
+	return testFilename.substr(index);
+}
 
 static std::string VKTS_APIENTRY cacheGetDirectory(const char* filename)
 {
 	if (!filename)
 	{
-		return std::string(VKTS_CACHE_DIRECTORY);
+		return std::string(fileGetBaseDirectory()) + std::string(VKTS_CACHE_DIRECTORY);
 	}
 
-	auto search = std::string(filename);
+	auto search = cacheGetRelativeFilename(filename);
 
 	auto lastSlash = search.rfind('/');
 
@@ -51,21 +72,21 @@ static std::string VKTS_APIENTRY cacheGetDirectory(const char* filename)
 
 		if (lastSlash == search.npos)
 		{
-			return std::string(VKTS_CACHE_DIRECTORY);
+			return std::string(fileGetBaseDirectory()) + std::string(VKTS_CACHE_DIRECTORY);
 		}
 	}
 
-	return std::string(VKTS_CACHE_DIRECTORY) + "/" + search.substr(0, lastSlash);
+	return std::string(fileGetBaseDirectory()) + std::string(VKTS_CACHE_DIRECTORY) + "/" + search.substr(0, lastSlash);
 }
 
 static std::string cacheGetFilename(const char* filename)
 {
 	if (!filename)
 	{
-		return std::string(VKTS_CACHE_DIRECTORY);
+		return std::string(fileGetBaseDirectory()) + std::string(VKTS_CACHE_DIRECTORY);
 	}
 
-	return std::string(VKTS_CACHE_DIRECTORY) + "/" + std::string(filename);
+	return std::string(fileGetBaseDirectory()) + std::string(VKTS_CACHE_DIRECTORY) + "/" + cacheGetRelativeFilename(filename);
 }
 
 VkBool32 VKTS_APIENTRY cacheGetEnabled()

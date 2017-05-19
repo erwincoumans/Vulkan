@@ -168,7 +168,7 @@ void Object::updateTransformRecursive(const double deltaTime, const uint64_t del
 
     if (rootNode.get())
     {
-        rootNode->updateTransformRecursive(deltaTime, deltaTicks, tickTime, currentBuffer, transformMatrix, dirty, glm::mat4(1.0f), VK_FALSE, INodeSP(), updateOverwrite);
+        rootNode->updateTransformRecursive(deltaTime, deltaTicks, tickTime, currentBuffer, transformMatrix, dirty, INodeSP(), updateOverwrite);
     }
 
     dirty = VK_FALSE;

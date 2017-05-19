@@ -30,10 +30,7 @@
 #include "../scene/BSDFMaterial.hpp"
 #include "../scene/Camera.hpp"
 #include "../scene/Channel.hpp"
-#include "../scene/CopyConstraint.hpp"
 #include "../scene/Light.hpp"
-#include "../scene/LimitConstraint.hpp"
-#include "../scene/Marker.hpp"
 #include "../scene/Mesh.hpp"
 #include "../scene/Node.hpp"
 #include "../scene/Object.hpp"
@@ -150,11 +147,6 @@ IChannelSP SceneFactory::createChannel(const ISceneManagerSP& sceneManager)
 	return IChannelSP(new Channel());
 }
 
-IMarkerSP SceneFactory::createMarker(const ISceneManagerSP& sceneManager)
-{
-	return IMarkerSP(new Marker());
-}
-
 IAnimationSP SceneFactory::createAnimation(const ISceneManagerSP& sceneManager)
 {
 	return IAnimationSP(new Animation());
@@ -170,18 +162,6 @@ ICameraSP SceneFactory::createCamera(const ISceneManagerSP& sceneManager)
 ILightSP SceneFactory::createLight(const ISceneManagerSP& sceneManager)
 {
 	return ILightSP(new Light());
-}
-
-//
-
-IConstraintSP SceneFactory::createCopyConstraint(const ISceneManagerSP& sceneManager, const enum CopyConstraintType copyConstraintType)
-{
-	return IConstraintSP(new CopyConstraint(copyConstraintType));
-}
-
-IConstraintSP SceneFactory::createLimitConstraint(const ISceneManagerSP& sceneManager, const enum LimitConstraintType limitConstraintType)
-{
-	return IConstraintSP(new LimitConstraint(limitConstraintType));
 }
 
 //

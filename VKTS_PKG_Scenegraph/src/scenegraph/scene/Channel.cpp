@@ -90,7 +90,10 @@ VkBool32 Channel::addEntry(const float key, const float value, const glm::vec4& 
         }
         else if (key < allKeys[index])
         {
-            index--;
+        	if (index > 0)
+        	{
+        		index--;
+        	}
 
             break;
         }

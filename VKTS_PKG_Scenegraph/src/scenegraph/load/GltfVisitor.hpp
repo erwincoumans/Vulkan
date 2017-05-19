@@ -74,6 +74,8 @@ enum GltfState {
 	GltfState_Material,
 	GltfState_Mesh,
 	GltfState_Camera,
+	GltfState_Camera_Orthographic,
+	GltfState_Camera_Perspective,
 	GltfState_Skin,
 	GltfState_Node,
 	GltfState_Animation,
@@ -88,7 +90,6 @@ enum GltfState {
 	GltfState_Material_TextureInfo,
 	GltfState_Mesh_Primitive,
 	GltfState_Mesh_Primitive_Attributes,
-	GltfState_Skin_InverseBindMatrices,
 	GltfState_Skin_Joints,
 	GltfState_Node_Children,
 	GltfState_Animation_Sampler,
@@ -223,8 +224,12 @@ typedef struct _GltfPrimitive {
 	GltfAccessor* tangent;
 	GltfAccessor* texCoord0;
 	GltfAccessor* texCoord1;
-	GltfAccessor* joint;
-	GltfAccessor* weight;
+	GltfAccessor* joints0;
+	GltfAccessor* joints1;
+	GltfAccessor* weights0;
+	GltfAccessor* weights1;
+	GltfAccessor* color0;
+	GltfAccessor* color1;
 	GltfAccessor* indices;
 	int32_t mode;
 
@@ -262,7 +267,7 @@ typedef struct _GltfCamera {
 } GltfCamera;
 
 typedef struct _GltfSkin {
-	Vector<GltfAccessor*> inverseBindMatrices;
+	GltfAccessor* inverseBindMatrices;
 	uint32_t skeleton;
 	Vector<uint32_t> joints;
 	std::string name;
@@ -311,6 +316,8 @@ class GltfVisitor : public JsonVisitor
 private:
 
 	const std::string directory;
+
+	const IBinaryBufferSP binaryBuffer;
 
 	std::stack<enum GltfState> state;
 	std::stack<enum GltfSubState> subState;
@@ -375,6 +382,8 @@ private:
 	void visitTexture(JSONobject& jsonObject);
 	void visitMaterial(JSONobject& jsonObject);
 	void visitMesh(JSONobject& jsonObject);
+	void visitCameraOrthographic(JSONobject& jsonObject);
+	void visitCameraPerspective(JSONobject& jsonObject);
 	void visitCamera(JSONobject& jsonObject);
 	void visitSkin(JSONobject& jsonObject);
 	void visitNode(JSONobject& jsonObject);
@@ -398,7 +407,7 @@ public:
 
 	GltfVisitor() = delete;
 
-	explicit GltfVisitor(const std::string& directory);
+	explicit GltfVisitor(const std::string& directory, const IBinaryBufferSP& binaryBuffer);
 
 	virtual ~GltfVisitor();
 
@@ -473,6 +482,8 @@ public:
 	uint32_t getBytesPerComponent(const int32_t componentType) const;
 
 	uint32_t getComponentsPerType(const std::string& type) const;
+
+	const void* getBufferPointer(const GltfBufferView& bufferView) const;
 
 	const void* getBufferPointer(const GltfAccessor& accessor, const uint32_t element) const;
 

@@ -857,29 +857,9 @@ public:
 
     	//
 
-    	if (node.getRotate().x != 0.0f || node.getRotate().y != 0.0f || node.getRotate().z != 0.0f)
+    	if (node.getRotate().x != 0.0f || node.getRotate().y != 0.0f || node.getRotate().z != 0.0f || node.getRotate().w != 1.0f)
     	{
-    		Quat rotation;
-
-    		VkTsRotationMode rotationMode = node.getNodeRotationMode();
-
-    		if (!(node.isNode() || node.isArmature()))
-    		{
-    			rotationMode = node.getBindRotationMode();
-    		}
-
-        	switch (rotationMode)
-        	{
-        		case VKTS_EULER_YXZ:
-        			rotation = rotateRzRxRy(node.getRotate().z, node.getRotate().x, node.getRotate().y);
-        			break;
-        		case VKTS_EULER_XYZ:
-        			rotation = rotateRzRyRx(node.getRotate().z, node.getRotate().y, node.getRotate().x);
-        			break;
-        		case VKTS_EULER_XZY:
-        			rotation = rotateRyRzRx(node.getRotate().y, node.getRotate().z, node.getRotate().x);
-        			break;
-        	}
+    		Quat rotation = node.getRotate();
 
     		//
 
@@ -975,8 +955,8 @@ public:
 
     		SmartPointerVector<IChannelSP> allTranslates;
     		SmartPointerVector<IChannelSP> allScales;
+    		SmartPointerVector<IChannelSP> allEulerRotations;
     		SmartPointerVector<IChannelSP> allRotations;
-    		SmartPointerVector<IChannelSP> allQuaternionRotations;
 
     		// Merging channels, targeting the same transform.
     		for (uint32_t channelIndex = 0; channelIndex < currentAnimation->getNumberChannels(); channelIndex++)
@@ -988,11 +968,11 @@ public:
 					case VKTS_TARGET_TRANSFORM_TRANSLATE:
 						allTranslates.append(currentChannel);
 						break;
+					case VKTS_TARGET_TRANSFORM_EULER_ROTATE:
+						allEulerRotations.append(currentChannel);
+						break;
 					case VKTS_TARGET_TRANSFORM_ROTATE:
 						allRotations.append(currentChannel);
-						break;
-					case VKTS_TARGET_TRANSFORM_QUATERNION_ROTATE:
-						allQuaternionRotations.append(currentChannel);
 						break;
 					case VKTS_TARGET_TRANSFORM_SCALE:
 						allScales.append(currentChannel);
@@ -1001,7 +981,7 @@ public:
     		}
 
     		// Invalid combination, either Euler or Quaternion is valid.
-    		if (allRotations.size() > 0 && allQuaternionRotations.size() > 0)
+    		if (allEulerRotations.size() > 0 && allRotations.size() > 0)
     		{
     			return;
     		}
@@ -1125,11 +1105,11 @@ public:
     		std::map<float, glm::vec3> rotationValues;
     		VkTsInterpolator rotationInterpolate;
 
-    		for (uint32_t i = 0; i < allRotations.size(); i++)
+    		for (uint32_t i = 0; i < allEulerRotations.size(); i++)
     		{
 				uint32_t elementIndex = 0;
 
-				switch (allRotations[i]->getTargetTransformElement())
+				switch (allEulerRotations[i]->getTargetTransformElement())
 				{
 					case VKTS_TARGET_TRANSFORM_ELEMENT_X:
 						elementIndex = 0;
@@ -1144,9 +1124,9 @@ public:
 						return;
 				}
 
-				for (uint32_t k = 0; k < allRotations[i]->getNumberEntries(); k++)
+				for (uint32_t k = 0; k < allEulerRotations[i]->getNumberEntries(); k++)
     			{
-    				if (allRotations[i]->getInterpolators()[k] == VKTS_INTERPOLATOR_BEZIER)
+    				if (allEulerRotations[i]->getInterpolators()[k] == VKTS_INTERPOLATOR_BEZIER)
     				{
     					logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Animation has Bezier animation.");
     					return;
@@ -1154,16 +1134,16 @@ public:
 
     				if (k == 0)
     				{
-    					rotationInterpolate = allRotations[i]->getInterpolators()[k];
+    					rotationInterpolate = allEulerRotations[i]->getInterpolators()[k];
     				}
-    				else if (rotationInterpolate != allRotations[i]->getInterpolators()[k])
+    				else if (rotationInterpolate != allEulerRotations[i]->getInterpolators()[k])
     				{
     					logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Animation has mixed animation.");
     					return;
     				}
 
-    				float key = allRotations[i]->getKeys()[k];
-    				float value = allRotations[i]->getValues()[k];
+    				float key = allEulerRotations[i]->getKeys()[k];
+    				float value = allEulerRotations[i]->getValues()[k];
 
     				if (rotationValues.find(key) == rotationValues.end())
     				{
@@ -1181,11 +1161,11 @@ public:
     		std::map<float, glm::vec4> quaternionValues;
     		VkTsInterpolator quaternionInterpolate;
 
-    		for (uint32_t i = 0; i < allQuaternionRotations.size(); i++)
+    		for (uint32_t i = 0; i < allRotations.size(); i++)
     		{
 				uint32_t elementIndex = 0;
 
-				switch (allQuaternionRotations[i]->getTargetTransformElement())
+				switch (allRotations[i]->getTargetTransformElement())
 				{
 					case VKTS_TARGET_TRANSFORM_ELEMENT_X:
 						elementIndex = 0;
@@ -1201,9 +1181,9 @@ public:
 						break;
 				}
 
-				for (uint32_t k = 0; k < allQuaternionRotations[i]->getNumberEntries(); k++)
+				for (uint32_t k = 0; k < allRotations[i]->getNumberEntries(); k++)
     			{
-    				if (allQuaternionRotations[i]->getInterpolators()[k] == VKTS_INTERPOLATOR_BEZIER)
+    				if (allRotations[i]->getInterpolators()[k] == VKTS_INTERPOLATOR_BEZIER)
     				{
     					logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Animation has Bezier animation.");
     					return;
@@ -1211,16 +1191,16 @@ public:
 
     				if (k == 0)
     				{
-    					quaternionInterpolate = allQuaternionRotations[i]->getInterpolators()[k];
+    					quaternionInterpolate = allRotations[i]->getInterpolators()[k];
     				}
-    				else if (quaternionInterpolate != allQuaternionRotations[i]->getInterpolators()[k])
+    				else if (quaternionInterpolate != allRotations[i]->getInterpolators()[k])
     				{
     					logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Animation has mixed animation.");
     					return;
     				}
 
-    				float key = allQuaternionRotations[i]->getKeys()[k];
-    				float value = allQuaternionRotations[i]->getValues()[k];
+    				float key = allRotations[i]->getKeys()[k];
+    				float value = allRotations[i]->getValues()[k];
 
     				if (quaternionValues.find(key) == quaternionValues.end())
     				{
@@ -1237,33 +1217,9 @@ public:
 
     		if (rotationValues.size() > 0)
     		{
-	        	VkTsRotationMode currentRotationMode = node.getNodeRotationMode();
-
-	        	if (node.isArmature() || node.isJoint())
-	        	{
-	        		// Processing armature and joint.
-
-	        		currentRotationMode = node.getBindRotationMode();
-	        	}
-
 	        	for (auto it :  rotationValues)
     			{
-	        		Quat q;
-
-    	        	switch (currentRotationMode)
-    	        	{
-    	        		case VKTS_EULER_YXZ:
-    	        			q = rotateRzRxRy(it.second.z, it.second.x, it.second.y);
-    	        			break;
-    	        		case VKTS_EULER_XYZ:
-    	        			q = rotateRzRyRx(it.second.z, it.second.y, it.second.x);
-    	        			break;
-    	        		case VKTS_EULER_XZY:
-    	        			q = rotateRyRzRx(it.second.y, it.second.z, it.second.x);
-    	        			break;
-    	        		default:
-    	        			return;
-    	        	}
+	        		Quat q = it.second;
 
     	        	quaternionValues[it.first] = glm::vec4(q.x, q.y, q.z, q.w);
     			}

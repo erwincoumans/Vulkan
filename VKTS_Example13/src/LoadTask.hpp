@@ -57,7 +57,8 @@
 //
 
 //#define VKTS_ENVIRONMENT_SCENE_NAME "environment/ennis.vkts"
-#define VKTS_ENVIRONMENT_SCENE_NAME "environment/road_in_tenerife_mountain.vkts"
+//#define VKTS_ENVIRONMENT_SCENE_NAME "environment/road_in_tenerife_mountain.vkts"
+#define VKTS_ENVIRONMENT_SCENE_NAME "environment/field.vkts"
 //#define VKTS_ENVIRONMENT_SCENE_NAME "environment/studio.vkts"
 //#define VKTS_ENVIRONMENT_SCENE_NAME "environment/terrace_near_the_granaries.vkts"
 

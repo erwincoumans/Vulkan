@@ -42,12 +42,11 @@ private:
     INodeSP parentNode;
 
     glm::vec3 translate;
-    VkTsRotationMode nodeRotationMode;
-    glm::vec3 rotate;
+    Quat rotate;
     glm::vec3 scale;
 
     glm::vec3 finalTranslate;
-    glm::vec3 finalRotate;
+    Quat finalRotate;
     glm::vec3 finalScale;
 
     glm::mat4 transformMatrix;
@@ -56,15 +55,7 @@ private:
     int32_t jointIndex;
     int32_t joints;
 
-    glm::vec3 bindTranslate;
-    VkTsRotationMode bindRotationMode;
-    glm::vec3 bindRotate;
-    glm::vec3 bindScale;
-
-    glm::mat4 correctionMatrix;
-    glm::mat4 bindMatrix;
     glm::mat4 inverseBindMatrix;
-    std::vector<VkBool32> bindMatrixDirty;
 
     SmartPointerVector<INodeSP> allChildNodes;
 
@@ -72,8 +63,6 @@ private:
 
     SmartPointerVector<ICameraSP> allCameras;
     SmartPointerVector<ILightSP> allLights;
-
-    SmartPointerVector<IConstraintSP> allConstraints;
 
     SmartPointerVector<IAnimationSP> allAnimations;
 
@@ -125,13 +114,9 @@ public:
 
     virtual void setTranslate(const glm::vec3& translate) override;
 
-    virtual VkTsRotationMode getNodeRotationMode() const override;
+    virtual const Quat& getRotate() const override;
 
-    virtual void setNodeRotationMode(const VkTsRotationMode rotationMode) override;
-
-    virtual const glm::vec3& getRotate() const override;
-
-    virtual void setRotate(const glm::vec3& rotate) override;
+    virtual void setRotate(const Quat& rotate) override;
 
     virtual const glm::vec3& getScale() const override;
 
@@ -141,9 +126,9 @@ public:
 
     virtual void setFinalTranslate(const glm::vec3& translate) override;
 
-    virtual const glm::vec3& getFinalRotate() const override;
+    virtual const Quat& getFinalRotate() const override;
 
-    virtual void setFinalRotate(const glm::vec3& rotate) override;
+    virtual void setFinalRotate(const Quat& rotate) override;
 
     virtual const glm::vec3& getFinalScale() const override;
 
@@ -155,21 +140,9 @@ public:
 
     virtual int32_t getNumberJoints() const override;
 
-    virtual const glm::vec3& getBindTranslate() const override;
+    virtual const glm::mat4& getInverseBindMatrix() const override;
 
-    virtual void setBindTranslate(const glm::vec3& translate) override;
-
-    virtual VkTsRotationMode getBindRotationMode() const override;
-
-    virtual void setBindRotationMode(const VkTsRotationMode rotationMode) override;
-
-    virtual const glm::vec3& getBindRotate() const override;
-
-    virtual void setBindRotate(const glm::vec3& rotate) override;
-
-    virtual const glm::vec3& getBindScale() const override;
-
-    virtual void setBindScale(const glm::vec3& scale) override;
+    virtual void setInverseBindMatrix(const glm::mat4& inverseBindMatrix) override;
 
     virtual void addChildNode(const INodeSP& childNode) override;
 
@@ -178,6 +151,8 @@ public:
     virtual uint32_t getNumberChildNodes() const override;
 
     virtual const SmartPointerVector<INodeSP>& getChildNodes() const override;
+
+    virtual void sortChildNodes() override;
 
     virtual void addMesh(const IMeshSP& mesh) override;
 
@@ -202,14 +177,6 @@ public:
     virtual uint32_t getNumberLights() const override;
 
     virtual const SmartPointerVector<ILightSP>& getLights() const override;
-
-    virtual void addConstraint(const IConstraintSP& constraint) override;
-
-    virtual VkBool32 removeConstraint(const IConstraintSP& constraint) override;
-
-    virtual uint32_t getNumberConstraints() const override;
-
-    virtual const SmartPointerVector<IConstraintSP>& getConstraints() const override;
 
     virtual void addAnimation(const IAnimationSP& animation) override;
 
@@ -260,7 +227,7 @@ public:
 
     virtual void updateDescriptorSetsRecursive(const uint32_t allWriteDescriptorSetsCount, VkWriteDescriptorSet* allWriteDescriptorSets, const uint32_t currentBuffer) override;
 
-    virtual void updateTransformRecursive(const double deltaTime, const uint64_t deltaTicks, const double tickTime, const uint32_t currentBuffer, const glm::mat4& parentTransformMatrix, const VkBool32 parentTransformMatrixDirty, const glm::mat4& parentBindMatrix, const VkBool32 parentBindMatrixDirty, const INodeSP& armatureNode, const OverwriteUpdate* updateOverwrite = nullptr) override;
+    virtual void updateTransformRecursive(const double deltaTime, const uint64_t deltaTicks, const double tickTime, const uint32_t currentBuffer, const glm::mat4& parentTransformMatrix, const VkBool32 parentTransformMatrixDirty, const INodeSP& armatureNode, const OverwriteUpdate* updateOverwrite = nullptr) override;
 
     virtual void drawRecursive(const ICommandBuffersSP& cmdBuffer, const SmartPointerVector<IGraphicsPipelineSP>& allGraphicsPipelines, const uint32_t currentBuffer, const std::map<uint32_t, VkTsDynamicOffset>& dynamicOffsetMappings, const OverwriteDraw* renderOverwrite = nullptr) override;
 

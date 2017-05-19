@@ -30,18 +30,13 @@ namespace vkts
 {
 
 Animation::Animation() :
-    IAnimation(), name(""), start(0.0f), stop(0.0f), currentSection(-1), animationType(AnimationLoop), animationScale(1.0f), currentTime(0.0f), allMarkers(), allChannels()
+    IAnimation(), name(""), start(0.0f), stop(0.0f), animationType(AnimationLoop), animationScale(1.0f), currentTime(0.0f), allChannels()
 {
 }
 
 Animation::Animation(const Animation& other) :
-    IAnimation(), name(other.name + "_clone"), start(other.start), stop(other.stop), currentSection(other.currentSection), animationType(other.animationType), animationScale(other.animationScale), currentTime(other.currentTime), allChannels()
+    IAnimation(), name(other.name + "_clone"), start(other.start), stop(other.stop), animationType(other.animationType), animationScale(other.animationScale), currentTime(other.currentTime), allChannels()
 {
-    for (uint32_t i = 0; i < other.allMarkers.size(); i++)
-    {
-        allMarkers.append(other.allMarkers[i]->clone());
-    }
-
     for (uint32_t i = 0; i < other.allChannels.size(); i++)
     {
         allChannels.append(other.allChannels[i]->clone());
@@ -69,12 +64,7 @@ void Animation::setName(const std::string& name)
 
 float Animation::getStart() const
 {
-	if (currentSection == -1 || currentSection == 0)
-	{
-		return start;
-	}
-
-	return allMarkers[currentSection - 1]->getTime();
+	return start;
 }
 
 void Animation::setStart(const float start)
@@ -84,40 +74,12 @@ void Animation::setStart(const float start)
 
 float Animation::getStop() const
 {
-	if (currentSection == -1 || currentSection == (int32_t)allMarkers.size())
-	{
-		return stop;
-	}
-
-	return allMarkers[currentSection]->getTime();
+	return stop;
 }
 
 void Animation::setStop(const float stop)
 {
     this->stop = stop;
-}
-
-void Animation::setCurrentSection(const int32_t currentSection)
-{
-	if (currentSection < -1 || allMarkers.size() == 0)
-	{
-		this->currentSection = -1;
-	}
-	else if (currentSection > (int32_t)allMarkers.size())
-	{
-		this->currentSection = (int32_t)allMarkers.size();
-	}
-	else
-	{
-		this->currentSection = currentSection;
-	}
-
-	currentTime = getStart();
-}
-
-int32_t Animation::getCurrentSection() const
-{
-	return currentSection;
 }
 
 enum AnimationType Animation::getAnimationType() const
@@ -214,38 +176,6 @@ float Animation::update(const float deltaTime)
 	return currentTime;
 }
 
-void Animation::addMarker(const IMarkerSP& marker)
-{
-	if (allMarkers.size() == 0)
-	{
-		setCurrentSection(0);
-	}
-
-	allMarkers.append(marker);
-}
-
-VkBool32 Animation::removeMarker(const IMarkerSP& marker)
-{
-	auto result = allMarkers.remove(marker);
-
-	if (allMarkers.size() == 0)
-	{
-		setCurrentSection(-1);
-	}
-
-    return result;
-}
-
-uint32_t Animation::getNumberMarkers() const
-{
-    return allMarkers.size();
-}
-
-const SmartPointerVector<IMarkerSP>& Animation::getMarkers() const
-{
-    return allMarkers;
-}
-
 void Animation::addChannel(const IChannelSP& channel)
 {
     allChannels.append(channel);
@@ -275,11 +205,6 @@ IAnimationSP Animation::clone() const
 	auto result = IAnimationSP(new Animation(*this));
 
 	if (result.get() && result->getNumberChannels() != getNumberChannels())
-	{
-		return IAnimationSP();
-	}
-
-	if (result.get() && result->getNumberMarkers() != getNumberMarkers())
 	{
 		return IAnimationSP();
 	}

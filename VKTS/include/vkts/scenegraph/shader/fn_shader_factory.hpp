@@ -36,7 +36,19 @@ namespace vkts
  *
  * @ThreadSafe
  */
-VKTS_APICALL std::string VKTS_APIENTRY shaderFactoryCreate(const std::string& directory, const VkShaderStageFlagBits shaderStage, const VkTsAttributes attributes, const VkTsMaterial material, const VkTsRenderer renderer);
+VKTS_APICALL VkBool32 VKTS_APIENTRY shaderFactoryValidateAttributes(const VkTsAttributes attributes);
+
+/**
+ *
+ * @ThreadSafe
+ */
+VKTS_APICALL std::string VKTS_APIENTRY shaderFactoryCreate(const std::string& directory, const VkTsMaterial material, const VkTsRenderer renderer, const VkTsAttributes attributes, const VkShaderStageFlagBits shaderStage);
+
+/**
+ *
+ * @ThreadSafe
+ */
+VKTS_APICALL std::string VKTS_APIENTRY shaderFactoryCreateFilename(const VkTsMaterial material, const VkTsRenderer renderer, const VkTsAttributes attributes, const VkShaderStageFlagBits shaderStage);
 
 }
 

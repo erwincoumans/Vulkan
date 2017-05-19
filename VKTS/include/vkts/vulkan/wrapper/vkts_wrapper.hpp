@@ -48,7 +48,7 @@
 #define VKTS_ENGINE_NAME            "VKTS"
 #define VKTS_ENGINE_MAJOR           1
 #define VKTS_ENGINE_MINOR           0
-#define VKTS_ENGINE_PATCH           46
+#define VKTS_ENGINE_PATCH           49
 #define VKTS_ENGINE_REVISION        0
 
 /**
@@ -103,7 +103,8 @@ typedef enum VkTsMaterial_
 typedef enum VkTsRenderer_
 {
     VKTS_RENDERER_FORWARD,
-    VKTS_RENDERER_DEFERRED
+    VKTS_RENDERER_DEFERRED,
+    VKTS_RENDERER_RESOLVE
 } VkTsRenderer;
 
 typedef struct VkTsStructureTypeHeader_

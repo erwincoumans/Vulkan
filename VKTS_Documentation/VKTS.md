@@ -5,9 +5,9 @@ Authors:
 
 **Norbert Nopper** (norbert@nopper.tv)
 
-VKTS version: **1.0.46.0**
+VKTS version: **1.0.49.0**
 
-Depending Vulkan API header version: **1.0.46**
+Depending Vulkan API header version: **1.0.49**
 
 Depending Vulkan extensions, when using a window system:
 
@@ -84,6 +84,9 @@ Features:
 
 Changelog:
 ----------
+
+05/18/2017
+- Updated to LunarG SDK 1.0.49.0.
 
 04/07/2017
 - Updated to LunarG SDK 1.0.46.0.

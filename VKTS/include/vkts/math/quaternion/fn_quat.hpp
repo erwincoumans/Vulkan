@@ -66,7 +66,19 @@ VKTS_APICALL float VKTS_APIENTRY dot(const Quat& q0, const Quat& q1);
  *
  * @ThreadSafe
  */
+VKTS_APICALL Quat VKTS_APIENTRY lerp(const Quat& q0, const Quat& q1, const float t);
+
+/**
+ *
+ * @ThreadSafe
+ */
 VKTS_APICALL Quat VKTS_APIENTRY slerp(const Quat& q0, const Quat& q1, const float t);
+
+/**
+ *
+ * @ThreadSafe
+ */
+VKTS_APICALL Quat VKTS_APIENTRY nlerp(const Quat& q0, const Quat& q1, const float t);
 
 /**
  *

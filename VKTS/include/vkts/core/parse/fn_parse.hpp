@@ -62,6 +62,8 @@ VKTS_APICALL VkBool32 VKTS_APIENTRY parseVec6(const char* buffer, float vec6[6])
 
 VKTS_APICALL VkBool32 VKTS_APIENTRY parseVec8(const char* buffer, float vec8[8]);
 
+VKTS_APICALL VkBool32 VKTS_APIENTRY parseVec16(const char* buffer, float vec16[16]);
+
 VKTS_APICALL VkBool32 VKTS_APIENTRY parseInt(const char* buffer, int32_t* scalar);
 
 VKTS_APICALL VkBool32 VKTS_APIENTRY parseIVec3(const char* buffer, int32_t ivec3[3]);

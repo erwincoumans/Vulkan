@@ -38,14 +38,13 @@ static float interpolateLinear(const uint32_t currentIndex, const float key, con
     float beforeValue = channel->getValues()[currentIndex];
 
     float afterKey = channel->getKeys()[currentIndex + 1];
+    float afterValue = channel->getValues()[currentIndex + 1];
 
     float deltaKey = afterKey - beforeKey;
     if (deltaKey == 0.0f)
     {
-        return beforeValue;
+        return afterValue;
     }
-
-    float afterValue = channel->getValues()[currentIndex + 1];
 
     return (afterValue - beforeValue) * (key - beforeKey) / deltaKey + beforeValue;
 }
@@ -111,14 +110,13 @@ static float interpolateBezier(const uint32_t currentIndex, const float key, con
     float beforeValue = channel->getValues()[currentIndex];
 
     float afterKey = channel->getKeys()[currentIndex + 1];
+    float afterValue = channel->getValues()[currentIndex + 1];
 
     float deltaKey = afterKey - beforeKey;
     if (deltaKey == 0.0f)
     {
-        return beforeValue;
+        return afterValue;
     }
-
-    float afterValue = channel->getValues()[currentIndex + 1];
 
     float beforeRightHandleKey = channel->getHandles()[currentIndex].z;
     float afterLeftHandleKey = channel->getHandles()[currentIndex + 1].x;

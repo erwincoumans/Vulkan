@@ -4,7 +4,7 @@ Building for Android, Linux and Windows:
 General requirements:
 ---------------------
   
-- [LunarG Vulkan SDK](http://vulkan.lunarg.com) version has to be 1.0.46.0.
+- [LunarG Vulkan SDK](http://vulkan.lunarg.com) version has to be 1.0.49.0.
 - [Python](https://www.python.org/) version has to be 3.5 or higher.  
 
 
@@ -133,7 +133,7 @@ Append the following lines to your `.profile` file in your home directory:
 `# Vulkan development setup.`  
 `#`  
   
-`export VULKAN_SDK=~/Development/VulkanSDK/1.0.46.0/x86_64`  
+`export VULKAN_SDK=~/Development/VulkanSDK/1.0.49.0/x86_64`  
   
 `export PATH=$PATH:$VULKAN_SDK/bin`  
 `export LD_LIBRARY_PATH=$VULKAN_SDK/lib`  

@@ -57,9 +57,9 @@ def friendlyTransformName(name):
     if len(name) >= len("location") and name[-len("location"):] == "location" :
         return "TRANSLATE"
     if len(name) >= len("rotation_euler") and name[-len("rotation_euler"):] == "rotation_euler" :
-        return "ROTATE"
+        return "EULER_ROTATE"
     if len(name) >= len("rotation_quaternion") and name[-len("rotation_quaternion"):] == "rotation_quaternion" :
-        return "QUATERNION_ROTATE"
+        return "ROTATE"
     if len(name) >= len("scale") and name[-len("scale"):] == "scale" :
         return "SCALE"
 
@@ -155,6 +155,12 @@ def convertRotation(rotation):
 
     return (math.degrees(rotation[0]), math.degrees(rotation[2]), -math.degrees(rotation[1]))
 
+def convertQuaternionRotation(rotation):
+
+    rotation = tuple(rotation)
+
+    return (rotation[1], rotation[3], -rotation[2], rotation[0])
+
 def convertScale(scale):
 
     scale = tuple(scale)
@@ -172,6 +178,12 @@ def convertRotationNoAdjust(rotation):
     rotation = tuple(rotation)
 
     return (math.degrees(rotation[0]), math.degrees(rotation[1]), math.degrees(rotation[2]))
+
+def convertQuaternionRotationNoAdjust(rotation):
+
+    rotation = tuple(rotation)
+
+    return (rotation[1], rotation[2], rotation[3], rotation[0])
 
 def convertScaleNoAdjust(scale):
 
@@ -2228,7 +2240,7 @@ def saveMeshes(context, filepath, materialsLibraryName, subMeshLibraryName):
 
     return
 
-def saveAnimation(context, fw, fw_animation, fw_channel, name, currentAnimation, filterName, isJoint, isArmature):
+def saveAnimation(context, fw, fw_animation, fw_channel, name, currentAnimation, filterName, isJoint, correctionMatrix, currentPoseBone):
 
     hasData = False
 
@@ -2256,15 +2268,8 @@ def saveAnimation(context, fw, fw_animation, fw_channel, name, currentAnimation,
     fw_animation("stop %f\n" % (context.scene.frame_end / context.scene.render.fps))
     fw_animation("\n")
 
-    if len(currentAnimation.action.pose_markers) > 0:
-        sortedMarkers = sorted(currentAnimation.action.pose_markers, key = lambda x : x.frame)
-
-        for currentMarker in sortedMarkers:
-            fw_animation("marker %s %f\n" % (currentMarker.name, currentMarker.frame / context.scene.render.fps))
-    fw_animation("\n")
-
     # Loop over curves several times to achieve sorting.
-    for usedTransform in ["TRANSLATE", "ROTATE", "QUATERNION_ROTATE", "SCALE"]:
+    for usedTransform in ["TRANSLATE", "EULER_ROTATE", "ROTATE", "SCALE"]:
 
         dataWritten = False
 
@@ -2311,13 +2316,39 @@ def saveAnimation(context, fw, fw_animation, fw_channel, name, currentAnimation,
                         value = currentKeyframe.co[1]
                         leftValue = currentKeyframe.handle_left[1]
                         rightValue = currentKeyframe.handle_right[1]
+                        
+                        #
+                        #
+                        #
+                        
+                        if isJoint:
+                            context.scene.frame_set(currentKeyframe.co[0])
+                            
+                            matrix = correctionMatrix * currentPoseBone.matrix_basis 
+
+                            ref_location, ref_rotation, ref_scale = matrix.decompose()
+                            
+                            if transform == "TRANSLATE":
+                                value = ref_location[currentCurve.array_index] 
+                            elif transform == "EULER_ROTATE":
+                                value = ref_rotation.to_euler('XYZ')[currentCurve.array_index]
+                            elif transform == "ROTATE":
+                                value = ref_rotation[currentCurve.array_index] 
+                            elif transform == "SCALE":
+                                value = ref_scale[currentCurve.array_index]
+                                
+                            # TODO: Left value and and right value. 
+
+                        #   
+                        #
+                        #   
 
                         if element == "Z" and transform != "SCALE" and not isJoint:
                             value = -value
                             leftValue = -leftValue
                             rightValue = -rightValue
                             
-                        if transform == "ROTATE":
+                        if transform == "EULER_ROTATE":
                             value = math.degrees(value)
                             leftValue = math.degrees(leftValue)
                             rightValue = math.degrees(rightValue)
@@ -2336,27 +2367,41 @@ def saveAnimation(context, fw, fw_animation, fw_channel, name, currentAnimation,
 
     return
 
-def saveBone(context, fw, fw_animation, fw_channel, currentPoseBone, armatureName, jointIndex, animation_data):
+def saveBone(context, fw, fw_animation, fw_channel, currentPoseBone, armatureName, jointIndex, animation_data, matrix_basis):
 
     parentPoseBone = currentPoseBone.parent
     if parentPoseBone is None:
         parentName = armatureName
     else:
         parentName = parentPoseBone.name
-
+        
+    context.scene.frame_set(context.scene.frame_start)
 
     fw("# Node.\n")
     fw("\n")
 
     # This matrix, as it is from the pose, already has the wanted coordinate system.
     # Switch to "Local" transformation orientation in Blender to see it.
+    axisBasisChangeMatrix = mathutils.Matrix(((1.0, 0.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, -1.0, 0.0, 0.0) , (0.0, 0.0, 0.0, 1.0))) * matrix_basis
+    
+    correctionMatrix = mathutils.Matrix.Identity(4)
+                
+    if currentPoseBone.parent is None:
+        correctionMatrix = axisBasisChangeMatrix
+                    
+    correctionMatrix = correctionMatrix * currentPoseBone.bone.matrix_local
+                    
+    if currentPoseBone.parent is not None:
+        correctionMatrix = currentPoseBone.parent.bone.matrix_local.inverted() * correctionMatrix
 
-    location, rotation, scale = currentPoseBone.matrix_basis.decompose()        
+    matrix = correctionMatrix * currentPoseBone.matrix_basis 
+
+    location, rotation, scale = matrix.decompose()        
 
     fw("node %s %s\n" % (friendlyName(currentPoseBone.name), friendlyName(parentName)))
     fw("\n")
     fw("translate %f %f %f\n" % (convertLocationNoAdjust(location)))
-    fw("rotate %f %f %f\n" % (convertRotationNoAdjust(rotation.to_euler('XYZ'))))
+    fw("rotate %f %f %f %f\n" % (convertQuaternionRotationNoAdjust(rotation)))
     fw("scale %f %f %f\n" % (convertScaleNoAdjust(scale)))
     fw("\n")
     fw("jointIndex %d\n" % jointIndex)
@@ -2368,37 +2413,28 @@ def saveBone(context, fw, fw_animation, fw_channel, currentPoseBone, armatureNam
     # As the root bone is relative to the Blender original coordinate system, the root bone has to be converted.
     # This has not to be done for the child bones, as this is canceled out through the inverted parent matrix.
 
-    convertMatrix = mathutils.Matrix(((1, 0, 0, 0), (0, 0, 1, 0), (0, -1, 0, 0) , (0, 0, 0, 1)))
-
-    bindMatrix = currentPoseBone.bone.matrix_local
-
-    parentBone = currentPoseBone.bone.parent
-    if parentBone:
-        bindMatrix = parentBone.matrix_local.inverted() * bindMatrix
-    else:
-        bindMatrix = convertMatrix * bindMatrix
+    inverseBindMatrix = axisBasisChangeMatrix * currentPoseBone.bone.matrix_local
+    inverseBindMatrix.invert()
     
-    location, rotation, scale = bindMatrix.decompose()        
+    matrix_data = []
 
-    location = convertLocationNoAdjust(location)
-    rotation = convertRotationNoAdjust(rotation.to_euler('XYZ'))
-    scale = convertScaleNoAdjust(scale)
+    for column in range(0, 4):
+        for row in range(0, 4):
+            matrix_data.append(inverseBindMatrix[row][column])
 
-    fw("bind_translate %f %f %f\n" % (location))
-    fw("bind_rotate %f %f %f\n" % (rotation))
-    fw("bind_scale %f %f %f\n" % (scale))
+    fw("inverse_bind_matrix %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f\n" % (tuple(matrix_data)))
     fw("\n")
     
     if animation_data is not None:
-        saveAnimation(context, fw, fw_animation, fw_channel, currentPoseBone.name, animation_data, currentPoseBone.name, True, False)
+        saveAnimation(context, fw, fw_animation, fw_channel, currentPoseBone.name, animation_data, currentPoseBone.name, True, correctionMatrix, currentPoseBone)
     
     return
 
 def saveNode(context, fw, fw_animation, fw_channel, currentObject):
-    location, rotation, scale = currentObject.matrix_basis.decompose()
+    location, rotation, scale = currentObject.matrix_local.decompose()
 
     location = convertLocation(location)
-    rotation = convertRotation(rotation.to_euler('XYZ'))
+    rotation = convertQuaternionRotation(rotation)
     scale = convertScale(scale)
 
     parentObject = currentObject.parent
@@ -2420,72 +2456,10 @@ def saveNode(context, fw, fw_animation, fw_channel, currentObject):
     fw("layers %x\n" % (layers))             
     fw("\n")
 
-    if len(currentObject.constraints) > 0:
-        for currentConstraint in currentObject.constraints:
-            writeData = False
-            writeDataCopy = False
-            writeDataLimit = False
-            
-            if currentConstraint.type == 'COPY_LOCATION' and currentConstraint.target is not None:
-                writeData = True
-                writeDataCopy = True
-                fw("constraint %s\n" % ("COPY_LOCATION"))
-            if currentConstraint.type == 'COPY_ROTATION' and currentConstraint.target is not None:
-                writeData = True
-                writeDataCopy = True
-                fw("constraint %s\n" % ("COPY_ROTATION"))
-            if currentConstraint.type == 'COPY_SCALE' and currentConstraint.target is not None:
-                writeData = True
-                writeDataCopy = True
-                fw("constraint %s\n" % ("COPY_SCALE"))
-
-            limitFactor = -1.0
-            if currentConstraint.type == 'LIMIT_LOCATION':
-                writeData = True
-                writeDataLimit = True
-                fw("constraint %s\n" % ("LIMIT_LOCATION"))
-            if currentConstraint.type == 'LIMIT_ROTATION':
-                writeData = True
-                writeDataLimit = True
-                fw("constraint %s\n" % ("LIMIT_ROTATION"))
-            if currentConstraint.type == 'LIMIT_SCALE':
-                writeData = True
-                writeDataLimit = True
-                fw("constraint %s\n" % ("LIMIT_SCALE"))
-                limitFactor = 1.0
-
-            if writeDataCopy:
-                fw("target %s\n" % (friendlyNodeName(currentConstraint.target.name)))
-                fw("use %s %s %s\n" % (friendlyBooleanName(currentConstraint.use_x), friendlyBooleanName(currentConstraint.use_z), friendlyBooleanName(currentConstraint.use_y)))
-                fw("invert %s %s %s\n" % (friendlyBooleanName(currentConstraint.invert_x), friendlyBooleanName(currentConstraint.invert_z), friendlyBooleanName(currentConstraint.invert_y)))
-                fw("use_offset %s\n" % (friendlyBooleanName(currentConstraint.use_offset)))                    
-
-            if writeDataLimit:
-                fw("use_min %s %s %s\n" % (friendlyBooleanName(currentConstraint.use_min_x), friendlyBooleanName(currentConstraint.use_min_z), friendlyBooleanName(currentConstraint.use_min_y)))
-                fw("use_max %s %s %s\n" % (friendlyBooleanName(currentConstraint.use_max_x), friendlyBooleanName(currentConstraint.use_max_z), friendlyBooleanName(currentConstraint.use_max_y)))
-                fw("min %f %f %f\n" % (currentConstraint.min_x, currentConstraint.min_z, currentConstraint.min_y * limitFactor))
-                fw("max %f %f %f\n" % (currentConstraint.max_x, currentConstraint.max_z, currentConstraint.max_y * limitFactor))
-
-            if writeData:
-                fw("influence %f\n" % (currentConstraint.influence))
-                fw("\n")
-
     fw("translate %f %f %f\n" % location)
-    fw("rotate %f %f %f\n" % rotation)
+    fw("rotate %f %f %f %f\n" % rotation)
     fw("scale %f %f %f\n" % scale)
     fw("\n")
-
-    if parentName != "-":
-        location, rotation, scale = currentObject.matrix_parent_inverse.decompose()
-
-        location = convertLocation(location)
-        rotation = convertRotation(rotation.to_euler('XYZ'))
-        scale = convertScale(scale)
-
-        fw("bind_translate %f %f %f\n" % (location))
-        fw("bind_rotate %f %f %f\n" % (rotation))
-        fw("bind_scale %f %f %f\n" % (scale))
-        fw("\n")
 
     if currentObject.type == 'MESH':
         fw("mesh %s\n" % friendlyName(currentObject.data.name))
@@ -2502,8 +2476,7 @@ def saveNode(context, fw, fw_animation, fw_channel, currentObject):
             fw("\n")
 
     if currentObject.animation_data is not None:
-        isArmature = currentObject.type == 'ARMATURE'
-        saveAnimation(context, fw, fw_animation, fw_channel, currentObject.name, currentObject.animation_data, None, False, isArmature)
+        saveAnimation(context, fw, fw_animation, fw_channel, currentObject.name, currentObject.animation_data, None, False, None, None)
 
     if currentObject.type == 'ARMATURE':
         fw("joints %d\n" % len(currentObject.pose.bones.values()))
@@ -2511,7 +2484,7 @@ def saveNode(context, fw, fw_animation, fw_channel, currentObject):
 
         jointIndex = 0
         for currentPoseBone in currentObject.pose.bones:
-            saveBone(context, fw, fw_animation, fw_channel, currentPoseBone, currentObject.name, jointIndex, currentObject.animation_data)
+            saveBone(context, fw, fw_animation, fw_channel, currentPoseBone, currentObject.name, jointIndex, currentObject.animation_data, currentObject.matrix_basis)
             jointIndex += 1
 
     for childObject in currentObject.children:

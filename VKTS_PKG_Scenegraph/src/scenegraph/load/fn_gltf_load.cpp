@@ -316,6 +316,7 @@ static VkBool32 gltfProcessSubMesh(ISubMeshSP& subMesh, const GltfVisitor& visit
             return VK_FALSE;
         }
 
+        // TODO: Support normalized UNSIGNET_SHORT and UNSIGNED_BYTE.
         if (!visitor.isFloat(gltfPrimitive.texCoord0->componentType) || !(visitor.getComponentsPerType(gltfPrimitive.texCoord0->type) == 2))
         {
         	return VK_FALSE;
@@ -338,6 +339,7 @@ static VkBool32 gltfProcessSubMesh(ISubMeshSP& subMesh, const GltfVisitor& visit
             return VK_FALSE;
         }
 
+        // TODO: Support normalized UNSIGNET_SHORT and UNSIGNED_BYTE.
         if (!visitor.isFloat(gltfPrimitive.texCoord1->componentType) || !(visitor.getComponentsPerType(gltfPrimitive.texCoord1->type) == 2))
         {
         	return VK_FALSE;
@@ -351,18 +353,65 @@ static VkBool32 gltfProcessSubMesh(ISubMeshSP& subMesh, const GltfVisitor& visit
         vertexBufferType |= VKTS_VERTEX_BUFFER_TYPE_TEXCOORD1;
 	}
 
-    if (gltfPrimitive.joint && gltfPrimitive.weight)
+    if (gltfPrimitive.joints0 && gltfPrimitive.weights0)
     {
-        if (gltfPrimitive.joint->count != gltfPrimitive.position->count)
+    	if (gltfPrimitive.joints0->count != gltfPrimitive.position->count)
         {
             logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Joint has different size");
 
             return VK_FALSE;
         }
 
-        if (!visitor.isFloat(gltfPrimitive.joint->componentType) || !(visitor.getComponentsPerType(gltfPrimitive.joint->type) == 4))
+        if (!(visitor.isUnsignedShort(gltfPrimitive.joints0->componentType) || visitor.isUnsignedShort(gltfPrimitive.joints0->componentType)) || !(visitor.getComponentsPerType(gltfPrimitive.joints0->type) == 4))
         {
         	return VK_FALSE;
+        }
+
+        //
+
+        if (gltfPrimitive.weights0->count != gltfPrimitive.position->count)
+        {
+            logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Weight has different size");
+
+            return VK_FALSE;
+        }
+
+        // TODO: Support normalized UNSIGNET_SHORT and UNSIGNED_BYTE.
+        if (!visitor.isFloat(gltfPrimitive.weights0->componentType) || !(visitor.getComponentsPerType(gltfPrimitive.weights0->type) == 4))
+        {
+        	return VK_FALSE;
+        }
+
+        //
+
+        if (gltfPrimitive.joints1 && gltfPrimitive.weights1)
+        {
+        	if (gltfPrimitive.joints1->count != gltfPrimitive.position->count)
+            {
+                logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Joint has different size");
+
+                return VK_FALSE;
+            }
+
+            if (!(visitor.isUnsignedShort(gltfPrimitive.joints1->componentType) || visitor.isUnsignedShort(gltfPrimitive.joints1->componentType)) || !(visitor.getComponentsPerType(gltfPrimitive.joints1->type) == 4))
+            {
+            	return VK_FALSE;
+            }
+
+            //
+
+            // TODO: Support normalized UNSIGNET_SHORT and UNSIGNED_BYTE.
+            if (gltfPrimitive.weights1->count != gltfPrimitive.position->count)
+            {
+                logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Weight has different size");
+
+                return VK_FALSE;
+            }
+
+            if (!visitor.isFloat(gltfPrimitive.weights1->componentType) || !(visitor.getComponentsPerType(gltfPrimitive.weights1->type) == 4))
+            {
+            	return VK_FALSE;
+            }
         }
 
         subMesh->setBoneIndices0Offset(strideInBytes);
@@ -379,18 +428,6 @@ static VkBool32 gltfProcessSubMesh(ISubMeshSP& subMesh, const GltfVisitor& visit
 
         //
         //
-
-        if (gltfPrimitive.weight->count != gltfPrimitive.position->count)
-        {
-            logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Weight has different size");
-
-            return VK_FALSE;
-        }
-
-        if (!visitor.isFloat(gltfPrimitive.weight->componentType) || !(visitor.getComponentsPerType(gltfPrimitive.weight->type) == 4))
-        {
-        	return VK_FALSE;
-        }
 
         subMesh->setBoneWeights0Offset(strideInBytes);
         strideInBytes += 4 * sizeof(float);
@@ -414,6 +451,8 @@ static VkBool32 gltfProcessSubMesh(ISubMeshSP& subMesh, const GltfVisitor& visit
 
         vertexBufferType |= VKTS_VERTEX_BUFFER_TYPE_BONES;
     }
+
+    // TODO: Support COLOR_0 and COLOR_1
 
     subMesh->setStrideInBytes(strideInBytes);
 
@@ -766,26 +805,70 @@ static VkBool32 gltfProcessSubMesh(ISubMeshSP& subMesh, const GltfVisitor& visit
             }
             if (vertexBufferType & VKTS_VERTEX_BUFFER_TYPE_BONE_INDICES0)
             {
-            	currentFloatData = visitor.getFloatPointer(*gltfPrimitive.joint, currentVertexElement);
+				const uint8_t* currentUnsignedBytePointer = visitor.getUnsignedBytePointer(*gltfPrimitive.joints0, currentVertexElement);
+				const uint16_t* currentUnsignedShortPointer = visitor.getUnsignedShortPointer(*gltfPrimitive.joints0, currentVertexElement);
 
-            	if (!currentFloatData)
+				if (!currentUnsignedBytePointer && !currentUnsignedShortPointer)
+				{
+					return VK_FALSE;
+				}
+
+            	for (uint32_t i = 0; i < 4; i++)
             	{
-            		return VK_FALSE;
-            	}
+					float value = 0.0;
 
-                vertexBinaryBuffer->write((const void*)currentFloatData, 1, 4 * sizeof(float));
-            }
+					if (currentUnsignedBytePointer)
+					{
+						value = (float)currentUnsignedBytePointer[i];
+					}
+					else
+					{
+						value = (float)currentUnsignedShortPointer[i];
+					}
+
+					vertexBinaryBuffer->write((const void*)&value, 1, 1 * sizeof(float));
+            	}
+	        }
             if (vertexBufferType & VKTS_VERTEX_BUFFER_TYPE_BONE_INDICES1)
             {
-            	float boneIndices1[4] = {-1.0f, -1.0f, -1.0f, -1.0f};
+            	if (gltfPrimitive.joints1)
+            	{
+    				const uint8_t* currentUnsignedBytePointer = visitor.getUnsignedBytePointer(*gltfPrimitive.joints1, currentVertexElement);
+    				const uint16_t* currentUnsignedShortPointer = visitor.getUnsignedShortPointer(*gltfPrimitive.joints1, currentVertexElement);
 
-            	// Do not change, as data not given.
+    				if (!currentUnsignedBytePointer && !currentUnsignedShortPointer)
+    				{
+    					return VK_FALSE;
+    				}
 
-                vertexBinaryBuffer->write((const void*)boneIndices1, 1, 4 * sizeof(float));
+                	for (uint32_t i = 0; i < 4; i++)
+                	{
+    					float value = 0.0;
+
+    					if (currentUnsignedBytePointer)
+    					{
+    						value = (float)currentUnsignedBytePointer[i];
+    					}
+    					else
+    					{
+    						value = (float)currentUnsignedShortPointer[i];
+    					}
+
+    					vertexBinaryBuffer->write((const void*)&value, 1, 1 * sizeof(float));
+                	}
+            	}
+            	else
+            	{
+					float boneIndices1[4] = {-1.0f, -1.0f, -1.0f, -1.0f};
+
+					// Do not change, as data not given.
+
+					vertexBinaryBuffer->write((const void*)boneIndices1, 1, 4 * sizeof(float));
+            	}
             }
             if (vertexBufferType & VKTS_VERTEX_BUFFER_TYPE_BONE_WEIGHTS0)
             {
-            	currentFloatData = visitor.getFloatPointer(*gltfPrimitive.weight, currentVertexElement);
+            	currentFloatData = visitor.getFloatPointer(*gltfPrimitive.weights0, currentVertexElement);
 
             	if (!currentFloatData)
             	{
@@ -796,17 +879,34 @@ static VkBool32 gltfProcessSubMesh(ISubMeshSP& subMesh, const GltfVisitor& visit
             }
             if (vertexBufferType & VKTS_VERTEX_BUFFER_TYPE_BONE_WEIGHTS1)
             {
-            	float boneWeights1[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+            	if (gltfPrimitive.weights1)
+            	{
+                	currentFloatData = visitor.getFloatPointer(*gltfPrimitive.weights1, currentVertexElement);
 
-            	// Do not change, as data not given.
+                	if (!currentFloatData)
+                	{
+                		return VK_FALSE;
+                	}
 
-                vertexBinaryBuffer->write((const void*)boneWeights1, 1, 4 * sizeof(float));
+                    vertexBinaryBuffer->write((const void*)currentFloatData, 1, 4 * sizeof(float));
+            	}
+            	else
+            	{
+					float boneWeights1[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+
+					// Do not change, as data not given.
+
+					vertexBinaryBuffer->write((const void*)boneWeights1, 1, 4 * sizeof(float));
+            	}
             }
             if (vertexBufferType & VKTS_VERTEX_BUFFER_TYPE_BONE_NUMBERS)
             {
             	float numberBones[1] = {4};
 
-            	// Do not change, as data not given.
+            	if (gltfPrimitive.joints1 && gltfPrimitive.weights1)
+            	{
+            		numberBones[0] += 4;
+            	}
 
                 vertexBinaryBuffer->write((const void*)numberBones, 1, 1 * sizeof(float));
             }
@@ -865,257 +965,317 @@ static VkBool32 gltfProcessSubMesh(ISubMeshSP& subMesh, const GltfVisitor& visit
 
 	// Optional
 
-	if (gltfPrimitive.material)
+	GltfMaterial defaultMaterial;
+
+	defaultMaterial.alphaMode = "OPAQUE";
+	defaultMaterial.alphaCutoff = 0.5f;
+	defaultMaterial.doubleSided = VK_FALSE;
+
+	defaultMaterial.useSpecularGlossiness = VK_FALSE;
+
+	//
+
+	defaultMaterial.pbrMetallicRoughness.baseColorFactor[0] = 1.0f;
+	defaultMaterial.pbrMetallicRoughness.baseColorFactor[1] = 1.0f;
+	defaultMaterial.pbrMetallicRoughness.baseColorFactor[2] = 1.0f;
+	defaultMaterial.pbrMetallicRoughness.baseColorFactor[3] = 1.0f;
+	defaultMaterial.pbrMetallicRoughness.baseColorTexture = nullptr;
+
+	defaultMaterial.pbrMetallicRoughness.metallicFactor = 1.0f;
+
+	defaultMaterial.pbrMetallicRoughness.roughnessFactor = 1.0f;
+	defaultMaterial.pbrMetallicRoughness.metallicRoughnessTexture = nullptr;
+
+	//
+
+	defaultMaterial.pbrSpecularGlossiness.diffuseFactor[0] = 1.0f;
+	defaultMaterial.pbrSpecularGlossiness.diffuseFactor[1] = 1.0f;
+	defaultMaterial.pbrSpecularGlossiness.diffuseFactor[2] = 1.0f;
+	defaultMaterial.pbrSpecularGlossiness.diffuseFactor[3] = 1.0f;
+	defaultMaterial.pbrSpecularGlossiness.diffuseTexture = nullptr;
+
+	defaultMaterial.pbrSpecularGlossiness.specularFactor[0] = 1.0f;
+	defaultMaterial.pbrSpecularGlossiness.specularFactor[1] = 1.0f;
+	defaultMaterial.pbrSpecularGlossiness.specularFactor[2] = 1.0f;
+
+	defaultMaterial.pbrSpecularGlossiness.glossinessFactor = 1.0f;
+
+	defaultMaterial.pbrSpecularGlossiness.specularGlossinessTexture = nullptr;
+
+	//
+
+	defaultMaterial.normalScale = 1.0f;
+	defaultMaterial.normalTexture = nullptr;
+
+	defaultMaterial.occlusionStrength = 1.0f;
+	defaultMaterial.occlusionTexture = nullptr;
+
+	defaultMaterial.emissiveFactor[0] = 0.0f;
+	defaultMaterial.emissiveFactor[1] = 0.0f;
+	defaultMaterial.emissiveFactor[2] = 0.0f;
+	defaultMaterial.emissiveTexture = nullptr;
+
+	defaultMaterial.name = "VKTS_DEFAULT_MATERIAL";
+
+	//
+
+	GltfMaterial* material = gltfPrimitive.material;
+
+	if (!material)
 	{
-		auto bsdfMaterial = sceneManager->useBSDFMaterial(gltfPrimitive.material->name);
+		material = &defaultMaterial;
+	}
+
+	//
+
+	auto bsdfMaterial = sceneManager->useBSDFMaterial(material->name);
+
+	if (!bsdfMaterial.get())
+	{
+		bsdfMaterial = sceneFactory->createBSDFMaterial(sceneManager, VK_TRUE);
 
 		if (!bsdfMaterial.get())
 		{
-			bsdfMaterial = sceneFactory->createBSDFMaterial(sceneManager, VK_TRUE);
+			return VK_FALSE;
+		}
 
-			if (!bsdfMaterial.get())
+		bsdfMaterial->setName(material->name);
+
+		bsdfMaterial->setSorted(VK_TRUE);
+		bsdfMaterial->setPacked(VK_TRUE);
+
+		if (material->alphaMode == "BLEND")
+		{
+			bsdfMaterial->setTransparent(VK_TRUE);
+		}
+		else if (material->alphaMode == "MASK")
+		{
+			bsdfMaterial->setAlphaCutoff(material->alphaCutoff);
+		}
+
+		if (material->doubleSided)
+		{
+			subMesh->setDoubleSided(VK_TRUE);
+		}
+
+		if (material->useSpecularGlossiness)
+		{
+			//
+			// Diffuse
+			//
+
+			ITextureObjectSP diffuse = gltfProcessTextureObject(material->pbrSpecularGlossiness.diffuseTexture, material->pbrSpecularGlossiness.diffuseFactor, VK_TRUE, VKTS_LDR_COLOR_DATA, sceneManager);
+
+			if (!diffuse.get())
 			{
 				return VK_FALSE;
 			}
 
-			bsdfMaterial->setName(gltfPrimitive.material->name);
-
-			bsdfMaterial->setSorted(VK_TRUE);
-			bsdfMaterial->setPacked(VK_TRUE);
-
-			if (gltfPrimitive.material->alphaMode == "BLEND")
+			bsdfMaterial->addTextureObject(diffuse);
+			if (material->pbrSpecularGlossiness.diffuseTexture)
 			{
-				bsdfMaterial->setTransparent(VK_TRUE);
-			}
-			else if (gltfPrimitive.material->alphaMode == "MASK")
-			{
-				bsdfMaterial->setAlphaCutoff(gltfPrimitive.material->alphaCutoff);
+				bsdfMaterial->setTexCoordIndex(0, material->pbrSpecularGlossiness.diffuseTexture->texCoord);
 			}
 
-			if (gltfPrimitive.material->doubleSided)
+			//
+			// Specular glossiness
+			//
+
+			float specularGlossinessFactors[] = {material->pbrSpecularGlossiness.specularFactor[0], material->pbrSpecularGlossiness.specularFactor[1], material->pbrSpecularGlossiness.specularFactor[2], material->pbrSpecularGlossiness.glossinessFactor};
+
+			ITextureObjectSP specularGlossiness = gltfProcessTextureObject(material->pbrSpecularGlossiness.specularGlossinessTexture, specularGlossinessFactors, VK_TRUE, VKTS_NON_COLOR_DATA, sceneManager);
+
+			if (!specularGlossiness.get())
 			{
-				subMesh->setDoubleSided(VK_TRUE);
+				return VK_FALSE;
 			}
 
-			if (gltfPrimitive.material->useSpecularGlossiness)
+			bsdfMaterial->addTextureObject(specularGlossiness);
+			if (material->pbrSpecularGlossiness.specularGlossinessTexture)
 			{
-				//
-				// Diffuse
-				//
+				bsdfMaterial->setTexCoordIndex(1, material->pbrSpecularGlossiness.specularGlossinessTexture->texCoord);
+			}
+		}
+		else
+		{
+			//
+			// Base color
+			//
 
-				ITextureObjectSP diffuse = gltfProcessTextureObject(gltfPrimitive.material->pbrSpecularGlossiness.diffuseTexture, gltfPrimitive.material->pbrSpecularGlossiness.diffuseFactor, VK_TRUE, VKTS_LDR_COLOR_DATA, sceneManager);
+			ITextureObjectSP baseColor = gltfProcessTextureObject(material->pbrMetallicRoughness.baseColorTexture, material->pbrMetallicRoughness.baseColorFactor, VK_TRUE, VKTS_LDR_COLOR_DATA, sceneManager);
 
-				if (!diffuse.get())
-				{
-					return VK_FALSE;
-				}
+			if (!baseColor.get())
+			{
+				return VK_FALSE;
+			}
 
-				bsdfMaterial->addTextureObject(diffuse);
-				if (gltfPrimitive.material->pbrSpecularGlossiness.diffuseTexture)
-				{
-					bsdfMaterial->setTexCoordIndex(0, gltfPrimitive.material->pbrSpecularGlossiness.diffuseTexture->texCoord);
-				}
+			bsdfMaterial->addTextureObject(baseColor);
+			if (material->pbrMetallicRoughness.baseColorTexture)
+			{
+				bsdfMaterial->setTexCoordIndex(0, material->pbrMetallicRoughness.baseColorTexture->texCoord);
+			}
 
-				//
-				// Specular glossiness
-				//
+			//
+			// Metallic roughness
+			//
 
-				float specularGlossinessFactors[] = {gltfPrimitive.material->pbrSpecularGlossiness.specularFactor[0], gltfPrimitive.material->pbrSpecularGlossiness.specularFactor[1], gltfPrimitive.material->pbrSpecularGlossiness.specularFactor[2], gltfPrimitive.material->pbrSpecularGlossiness.glossinessFactor};
+			float metallicRoughnessFactors[] = {1.0f, material->pbrMetallicRoughness.roughnessFactor, material->pbrMetallicRoughness.metallicFactor, 1.0f};
 
-				ITextureObjectSP specularGlossiness = gltfProcessTextureObject(gltfPrimitive.material->pbrSpecularGlossiness.specularGlossinessTexture, specularGlossinessFactors, VK_TRUE, VKTS_NON_COLOR_DATA, sceneManager);
+			ITextureObjectSP metallicRoughness = gltfProcessTextureObject(material->pbrMetallicRoughness.metallicRoughnessTexture, metallicRoughnessFactors, VK_TRUE, VKTS_NON_COLOR_DATA, sceneManager);
 
-				if (!specularGlossiness.get())
-				{
-					return VK_FALSE;
-				}
+			if (!metallicRoughness.get())
+			{
+				return VK_FALSE;
+			}
 
-				bsdfMaterial->addTextureObject(specularGlossiness);
-				if (gltfPrimitive.material->pbrSpecularGlossiness.specularGlossinessTexture)
-				{
-					bsdfMaterial->setTexCoordIndex(1, gltfPrimitive.material->pbrSpecularGlossiness.specularGlossinessTexture->texCoord);
-				}
+			bsdfMaterial->addTextureObject(metallicRoughness);
+			if (material->pbrMetallicRoughness.metallicRoughnessTexture)
+			{
+				bsdfMaterial->setTexCoordIndex(1, material->pbrMetallicRoughness.metallicRoughnessTexture->texCoord);
+			}
+		}
+
+		//
+		// Normal
+		//
+
+		ITextureObjectSP normal = gltfProcessTextureObject(material->normalTexture, material->normalScale, VK_TRUE, VKTS_NORMAL_DATA, sceneManager);
+
+		if (!normal.get())
+		{
+			return VK_FALSE;
+		}
+
+		bsdfMaterial->addTextureObject(normal);
+		if (material->normalTexture)
+		{
+			bsdfMaterial->setTexCoordIndex(2, material->normalTexture->texCoord);
+		}
+
+		//
+		// Ambient occlusion
+		//
+
+		ITextureObjectSP ambientOcclusion = gltfProcessTextureObject(material->occlusionTexture, 1.0f, VK_TRUE, VKTS_NON_COLOR_DATA, sceneManager);
+
+		if (!ambientOcclusion.get())
+		{
+			return VK_FALSE;
+		}
+
+		bsdfMaterial->setAmbientOcclusionStrength(material->occlusionStrength);
+
+		bsdfMaterial->addTextureObject(ambientOcclusion);
+		if (material->occlusionTexture)
+		{
+			bsdfMaterial->setTexCoordIndex(3, material->occlusionTexture->texCoord);
+		}
+
+		//
+		// Emissive
+		//
+
+		float emissiveFactors[] = {material->emissiveFactor[0], material->emissiveFactor[1], material->emissiveFactor[2], 1.0f};
+
+		ITextureObjectSP emissive = gltfProcessTextureObject(material->emissiveTexture, emissiveFactors, VK_TRUE, VKTS_LDR_COLOR_DATA, sceneManager);
+
+		if (!emissive.get())
+		{
+			return VK_FALSE;
+		}
+
+		bsdfMaterial->addTextureObject(emissive);
+		if (material->emissiveTexture)
+		{
+			bsdfMaterial->setTexCoordIndex(4, material->emissiveTexture->texCoord);
+		}
+
+		//
+		// Attribute
+		//
+
+		bsdfMaterial->setAttributes(subMesh->getVertexBufferType());
+
+		//
+		// Shader
+		//
+
+		const char* fragmentShader = nullptr;
+
+		if (material->useSpecularGlossiness)
+		{
+			if ((bsdfMaterial->getAttributes() & (VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0 | VKTS_VERTEX_BUFFER_TYPE_TEXCOORD1)) == (VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0 | VKTS_VERTEX_BUFFER_TYPE_TEXCOORD1))
+			{
+				fragmentShader = VKTS_GLTF_SG_FORWARD_TWO_TEXCOORD_FRAGMENT_SHADER_NAME;
+			}
+			else if ((bsdfMaterial->getAttributes() & VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0) == VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0)
+			{
+				fragmentShader = VKTS_GLTF_SG_FORWARD_FRAGMENT_SHADER_NAME;
 			}
 			else
 			{
-				//
-				// Base color
-				//
-
-				ITextureObjectSP baseColor = gltfProcessTextureObject(gltfPrimitive.material->pbrMetallicRoughness.baseColorTexture, gltfPrimitive.material->pbrMetallicRoughness.baseColorFactor, VK_TRUE, VKTS_LDR_COLOR_DATA, sceneManager);
-
-				if (!baseColor.get())
-				{
-					return VK_FALSE;
-				}
-
-				bsdfMaterial->addTextureObject(baseColor);
-				if (gltfPrimitive.material->pbrMetallicRoughness.baseColorTexture)
-				{
-					bsdfMaterial->setTexCoordIndex(0, gltfPrimitive.material->pbrMetallicRoughness.baseColorTexture->texCoord);
-				}
-
-				//
-				// Metallic roughness
-				//
-
-				float metallicRoughnessFactors[] = {1.0f, gltfPrimitive.material->pbrMetallicRoughness.roughnessFactor, gltfPrimitive.material->pbrMetallicRoughness.metallicFactor, 1.0f};
-
-				ITextureObjectSP metallicRoughness = gltfProcessTextureObject(gltfPrimitive.material->pbrMetallicRoughness.metallicRoughnessTexture, metallicRoughnessFactors, VK_TRUE, VKTS_NON_COLOR_DATA, sceneManager);
-
-				if (!metallicRoughness.get())
-				{
-					return VK_FALSE;
-				}
-
-				bsdfMaterial->addTextureObject(metallicRoughness);
-				if (gltfPrimitive.material->pbrMetallicRoughness.metallicRoughnessTexture)
-				{
-					bsdfMaterial->setTexCoordIndex(1, gltfPrimitive.material->pbrMetallicRoughness.metallicRoughnessTexture->texCoord);
-				}
+				fragmentShader = VKTS_GLTF_SG_FORWARD_NO_TEXCOORD_FRAGMENT_SHADER_NAME;
 			}
-
-			//
-			// Normal
-			//
-
-			ITextureObjectSP normal = gltfProcessTextureObject(gltfPrimitive.material->normalTexture, gltfPrimitive.material->normalScale, VK_TRUE, VKTS_NORMAL_DATA, sceneManager);
-
-			if (!normal.get())
+		}
+		else
+		{
+			if ((bsdfMaterial->getAttributes() & (VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0 | VKTS_VERTEX_BUFFER_TYPE_TEXCOORD1)) == (VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0 | VKTS_VERTEX_BUFFER_TYPE_TEXCOORD1))
 			{
-				return VK_FALSE;
+				fragmentShader = VKTS_GLTF_MR_FORWARD_TWO_TEXCOORD_FRAGMENT_SHADER_NAME;
 			}
-
-			bsdfMaterial->addTextureObject(normal);
-			if (gltfPrimitive.material->normalTexture)
+			else if ((bsdfMaterial->getAttributes() & VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0) == VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0)
 			{
-				bsdfMaterial->setTexCoordIndex(2, gltfPrimitive.material->normalTexture->texCoord);
-			}
-
-			//
-			// Ambient occlusion
-			//
-
-			ITextureObjectSP ambientOcclusion = gltfProcessTextureObject(gltfPrimitive.material->occlusionTexture, 1.0f, VK_TRUE, VKTS_NON_COLOR_DATA, sceneManager);
-
-			if (!ambientOcclusion.get())
-			{
-				return VK_FALSE;
-			}
-
-			bsdfMaterial->setAmbientOcclusionStrength(gltfPrimitive.material->occlusionStrength);
-
-			bsdfMaterial->addTextureObject(ambientOcclusion);
-			if (gltfPrimitive.material->occlusionTexture)
-			{
-				bsdfMaterial->setTexCoordIndex(3, gltfPrimitive.material->occlusionTexture->texCoord);
-			}
-
-			//
-			// Emissive
-			//
-
-			float emissiveFactors[] = {gltfPrimitive.material->emissiveFactor[0], gltfPrimitive.material->emissiveFactor[1], gltfPrimitive.material->emissiveFactor[2], 1.0f};
-
-			ITextureObjectSP emissive = gltfProcessTextureObject(gltfPrimitive.material->emissiveTexture, emissiveFactors, VK_TRUE, VKTS_LDR_COLOR_DATA, sceneManager);
-
-			if (!emissive.get())
-			{
-				return VK_FALSE;
-			}
-
-			bsdfMaterial->addTextureObject(emissive);
-			if (gltfPrimitive.material->emissiveTexture)
-			{
-				bsdfMaterial->setTexCoordIndex(4, gltfPrimitive.material->emissiveTexture->texCoord);
-			}
-
-			//
-			// Attribute
-			//
-
-			bsdfMaterial->setAttributes(subMesh->getVertexBufferType());
-
-			//
-			// Shader
-			//
-
-			const char* fragmentShader = nullptr;
-
-			if (gltfPrimitive.material->useSpecularGlossiness)
-			{
-				if ((bsdfMaterial->getAttributes() & (VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0 | VKTS_VERTEX_BUFFER_TYPE_TEXCOORD1)) == (VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0 | VKTS_VERTEX_BUFFER_TYPE_TEXCOORD1))
-				{
-					fragmentShader = VKTS_GLTF_SG_FORWARD_TWO_TEXCOORD_FRAGMENT_SHADER_NAME;
-				}
-				else if ((bsdfMaterial->getAttributes() & VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0) == VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0)
-				{
-					fragmentShader = VKTS_GLTF_SG_FORWARD_FRAGMENT_SHADER_NAME;
-				}
-				else
-				{
-					fragmentShader = VKTS_GLTF_SG_FORWARD_NO_TEXCOORD_FRAGMENT_SHADER_NAME;
-				}
+				fragmentShader = VKTS_GLTF_MR_FORWARD_FRAGMENT_SHADER_NAME;
 			}
 			else
 			{
-				if ((bsdfMaterial->getAttributes() & (VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0 | VKTS_VERTEX_BUFFER_TYPE_TEXCOORD1)) == (VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0 | VKTS_VERTEX_BUFFER_TYPE_TEXCOORD1))
-				{
-					fragmentShader = VKTS_GLTF_MR_FORWARD_TWO_TEXCOORD_FRAGMENT_SHADER_NAME;
-				}
-				else if ((bsdfMaterial->getAttributes() & VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0) == VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0)
-				{
-					fragmentShader = VKTS_GLTF_MR_FORWARD_FRAGMENT_SHADER_NAME;
-				}
-				else
-				{
-					fragmentShader = VKTS_GLTF_MR_FORWARD_NO_TEXCOORD_FRAGMENT_SHADER_NAME;
-				}
+				fragmentShader = VKTS_GLTF_MR_FORWARD_NO_TEXCOORD_FRAGMENT_SHADER_NAME;
 			}
+		}
 
-            auto shaderModule = sceneManager->useFragmentShaderModule(fragmentShader);
+		auto shaderModule = sceneManager->useFragmentShaderModule(fragmentShader);
 
-            if (!shaderModule.get())
-            {
-                std::string finalFilename = visitor.getDirectory() + std::string(fragmentShader);
+		if (!shaderModule.get())
+		{
+			std::string finalFilename = visitor.getDirectory() + std::string(fragmentShader);
 
-                auto shaderBinary = fileLoadBinary(finalFilename.c_str());
+			auto shaderBinary = fileLoadBinary(finalFilename.c_str());
+
+			if (!shaderBinary.get())
+			{
+				shaderBinary = fileLoadBinary(fragmentShader);
 
 				if (!shaderBinary.get())
 				{
-					shaderBinary = fileLoadBinary(fragmentShader);
-
-					if (!shaderBinary.get())
-					{
-						logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Could not load fragment shader: '%s'", fragmentShader, VKTS_MAX_TOKEN_CHARS);
-
-						return VK_FALSE;
-					}
-				}
-
-				//
-
-				shaderModule = createShaderModule(sceneManager->getAssetManager(), fragmentShader, shaderBinary);
-
-				if (!shaderModule.get())
-				{
-					logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Could not create fragment shader module.");
+					logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Could not load fragment shader: '%s'", fragmentShader, VKTS_MAX_TOKEN_CHARS);
 
 					return VK_FALSE;
 				}
+			}
 
-				sceneManager->addFragmentShaderModule(shaderModule);
-            }
+			//
 
-            bsdfMaterial->setFragmentShader(shaderModule);
-            bsdfMaterial->setSpecularGlossiness(gltfPrimitive.material->useSpecularGlossiness);
+			shaderModule = createShaderModule(sceneManager->getAssetManager(), fragmentShader, shaderBinary);
+
+			if (!shaderModule.get())
+			{
+				logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Could not create fragment shader module.");
+
+				return VK_FALSE;
+			}
+
+			sceneManager->addFragmentShaderModule(shaderModule);
 		}
 
-		subMesh->setBSDFMaterial(bsdfMaterial);
+		bsdfMaterial->setFragmentShader(shaderModule);
+		bsdfMaterial->setSpecularGlossiness(material->useSpecularGlossiness);
+	}
 
-    	if (!sceneFactory->getSceneRenderFactory()->prepareBSDFMaterial(sceneManager, subMesh))
-    	{
-    		return VK_FALSE;
-    	}
+	subMesh->setBSDFMaterial(bsdfMaterial);
+
+	if (!sceneFactory->getSceneRenderFactory()->prepareBSDFMaterial(sceneManager, subMesh))
+	{
+		return VK_FALSE;
 	}
 
 	return VK_TRUE;
@@ -1123,19 +1283,17 @@ static VkBool32 gltfProcessSubMesh(ISubMeshSP& subMesh, const GltfVisitor& visit
 
 static VkBool32 gltfProcessNode(INodeSP& node, const GltfVisitor& visitor, const GltfNode& gltfNode, const ISceneManagerSP& sceneManager, const ISceneFactorySP& sceneFactory)
 {
-	node->setNodeRotationMode(VKTS_EULER_YXZ);
-
-	//
-
 	// Process translation, rotation and scale.
 
 	node->setTranslate(glm::vec3(gltfNode.translation[0], gltfNode.translation[1], gltfNode.translation[2]));
 
 	Quat quat(gltfNode.rotation[0], gltfNode.rotation[1], gltfNode.rotation[2], gltfNode.rotation[3]);
 
-	node->setRotate(decomposeRotateRzRxRy(quat.mat4()));
+	node->setRotate(normalize(quat));
 
 	node->setScale(glm::vec3(gltfNode.scale[0], gltfNode.scale[1], gltfNode.scale[2]));
+
+	// TODO: Process camera.
 
     // Process mesh.
     if (gltfNode.mesh)
@@ -1145,59 +1303,118 @@ static VkBool32 gltfProcessNode(INodeSP& node, const GltfVisitor& visitor, const
             return VK_FALSE;
     	}
 
-    	//
-
-        auto mesh = sceneFactory->createMesh(sceneManager);
-
-        if (!mesh.get())
-        {
-            return VK_FALSE;
-        }
-
-        mesh->setName(gltfNode.mesh->name);
-
-        sceneManager->addMesh(mesh);
-
-        //
-
-        for (uint32_t k = 0; k < gltfNode.mesh->primitives.size(); k++)
-        {
-            auto subMesh = sceneFactory->createSubMesh(sceneManager);
-
-            if (!subMesh.get())
-            {
-                return VK_FALSE;
-            }
-
-            subMesh->setName(gltfNode.mesh->name + "_" + gltfNode.mesh->primitives[k].name);
-
-            sceneManager->addSubMesh(subMesh);
-
-            //
-
-            if (!gltfProcessSubMesh(subMesh, visitor, gltfNode.mesh->primitives[k], sceneManager, sceneFactory))
-            {
-            	return VK_FALSE;
-            }
-
-            //
-
-            auto currentSubMesh = sceneManager->useSubMesh(subMesh->getName());
-
-            mesh->addSubMesh(currentSubMesh);
-        }
-
-        //
-
-        auto currentMesh = sceneManager->useMesh(mesh->getName());
+        auto currentMesh = sceneManager->useMesh(gltfNode.mesh->name);
 
         if (!currentMesh.get())
         {
-            return VK_FALSE;
+			auto mesh = sceneFactory->createMesh(sceneManager);
+
+			if (!mesh.get())
+			{
+				return VK_FALSE;
+			}
+
+			mesh->setName(gltfNode.mesh->name);
+
+			sceneManager->addMesh(mesh);
+
+			//
+
+			for (uint32_t k = 0; k < gltfNode.mesh->primitives.size(); k++)
+			{
+				auto subMesh = sceneFactory->createSubMesh(sceneManager);
+
+				if (!subMesh.get())
+				{
+					return VK_FALSE;
+				}
+
+				subMesh->setName(gltfNode.mesh->name + "_" + gltfNode.mesh->primitives[k].name);
+
+				sceneManager->addSubMesh(subMesh);
+
+				//
+
+				if (!gltfProcessSubMesh(subMesh, visitor, gltfNode.mesh->primitives[k], sceneManager, sceneFactory))
+				{
+					return VK_FALSE;
+				}
+
+				//
+
+				auto currentSubMesh = sceneManager->useSubMesh(subMesh->getName());
+
+				mesh->addSubMesh(currentSubMesh);
+			}
+
+			currentMesh = sceneManager->useMesh(mesh->getName());
+
+			if (!currentMesh.get())
+	        {
+				return VK_FALSE;
+	        }
         }
 
         node->addMesh(currentMesh);
     }
+
+    //
+
+    for (uint32_t skinIndex = 0; skinIndex < visitor.getAllGltfSkins().size(); skinIndex++)
+    {
+    	const auto& skin = visitor.getAllGltfSkins()[skinIndex];
+
+    	if (&visitor.getAllGltfNodes()[skin.skeleton] == &gltfNode)
+    	{
+        	// Armature.
+        	if (!sceneFactory->getSceneRenderFactory()->prepareJointsUniformBuffer(sceneManager, node, (int32_t)skin.joints.size()))
+        	{
+                return VK_FALSE;
+        	}
+    	}
+
+    	uint32_t newIndex = 0;
+
+    	std::map<uint32_t, uint32_t> glToNewIndex;
+
+    	for (uint32_t jointLoopIndex = 0; jointLoopIndex < skin.joints.size(); jointLoopIndex++)
+    	{
+    		glToNewIndex[skin.joints[jointLoopIndex]] = newIndex;
+
+    		newIndex++;
+    	}
+
+    	for (uint32_t jointLoopIndex = 0; jointLoopIndex < skin.joints.size(); jointLoopIndex++)
+    	{
+    		uint32_t jointIndex = skin.joints[jointLoopIndex];
+
+        	if (&visitor.getAllGltfNodes()[jointIndex] == &gltfNode)
+        	{
+            	// Bone.
+        		node->setJointIndex((int32_t)glToNewIndex[jointIndex]);
+
+        		if (skin.inverseBindMatrices != nullptr)
+        		{
+        			const float* m = visitor.getFloatPointer(*skin.inverseBindMatrices, (uint32_t)node->getJointIndex());
+
+        			if (m != nullptr)
+					{
+
+						glm::mat4 inverseBindMatrix(1.0f);
+
+						for (uint32_t mi = 0; mi < 16; mi++)
+						{
+							inverseBindMatrix[mi / 4][mi % 4] = m[mi];
+						}
+
+						node->setInverseBindMatrix(inverseBindMatrix);
+					}
+        		}
+        	}
+    	}
+    }
+
+    //
 
     for (uint32_t i = 0; i < gltfNode.children.size(); i++)
     {
@@ -1225,6 +1442,8 @@ static VkBool32 gltfProcessNode(INodeSP& node, const GltfVisitor& visitor, const
         	return VK_FALSE;
         }
     }
+
+    node->sortChildNodes();
 
     //
     // Process animations.
@@ -1324,7 +1543,7 @@ static VkBool32 gltfProcessNode(INodeSP& node, const GltfVisitor& visitor, const
                 }
                 else if (gltfChannel.targetPath == "rotation")
                 {
-                	targetTransform = VKTS_TARGET_TRANSFORM_QUATERNION_ROTATE;
+                	targetTransform = VKTS_TARGET_TRANSFORM_ROTATE;
 
                 	targetTransformElementCount = 4;
                 }
@@ -1469,26 +1688,6 @@ static VkBool32 gltfProcessObject(IObjectSP& object, const GltfVisitor& visitor,
 
             //
 
-            if (gltfNode->skin)
-            {
-            	// Armature.
-            	if (gltfNode->skin->skeleton == i)
-            	{
-                	if (!sceneFactory->getSceneRenderFactory()->prepareJointsUniformBuffer(sceneManager, node, (int32_t)gltfNode->skin->joints.size()))
-                	{
-                        return VK_FALSE;
-                	}
-            	}
-
-            	// Bone.
-            	if (gltfNode->skin->joints.contains(i))
-            	{
-                	node->setJointIndex((int32_t)gltfNode->skin->joints.index(i));
-            	}
-            }
-
-            //
-
             if (!gltfProcessNode(node, visitor, *gltfNode, sceneManager, sceneFactory))
             {
             	return VK_FALSE;
@@ -1511,14 +1710,143 @@ ISceneSP VKTS_APIENTRY gltfLoad(const char* filename, const ISceneManagerSP& sce
         return ISceneSP();
     }
 
-	auto textFile = fileLoadText(filename);
+    //
 
-	if (!textFile.get())
-	{
-		return ISceneSP();
-	}
+    std::string lowerCaseFilename(filename);
+    std::transform(lowerCaseFilename.begin(), lowerCaseFilename.end(), lowerCaseFilename.begin(), ::tolower);
 
-	auto json = jsonDecode(textFile->getString());
+    auto dotPos = lowerCaseFilename.rfind('.');
+    if (dotPos == lowerCaseFilename.npos)
+    {
+        return ISceneSP();
+    }
+
+    std::string lowerCaseExtension = lowerCaseFilename.substr(dotPos);
+
+    //
+
+    std::string gltfString = "";
+    IBinaryBufferSP binaryBuffer;
+
+    if (lowerCaseExtension == ".gltf")
+    {
+    	auto textFile = fileLoadText(filename);
+
+    	if (!textFile.get())
+    	{
+    		return ISceneSP();
+    	}
+
+    	gltfString = textFile->getString();
+    }
+    else if (lowerCaseExtension == ".glb")
+    {
+    	auto binaryFile = fileLoadBinary(filename);
+
+    	if (!binaryFile.get())
+    	{
+    		return ISceneSP();
+    	}
+
+    	const uint8_t* data = binaryFile->getByteData();
+
+    	if (!data)
+    	{
+    		return ISceneSP();
+    	}
+
+    	//
+    	// Header.
+    	//
+
+    	if (binaryFile->getSize() < 12)
+    	{
+    		return ISceneSP();
+    	}
+
+    	// Magic
+    	if (!(data[0] == 'g' && data[1] == 'l' && data[2] == 'T' && data[3] == 'F'))
+    	{
+    		return ISceneSP();
+    	}
+
+    	// Version
+    	const uint32_t version = *(const uint32_t*)&data[4];
+    	if (version != 2)
+    	{
+    		return ISceneSP();
+    	}
+
+    	// Length
+    	const uint32_t length = *(const uint32_t*)&data[8];
+    	if (length != binaryFile->getSize())
+    	{
+    		return ISceneSP();
+    	}
+
+    	//
+    	// Chunk 0.
+    	//
+
+    	if (binaryFile->getSize() < 20)
+    	{
+    		return ISceneSP();
+    	}
+
+    	// Chunk 0 length
+    	const uint32_t chunk0Length = *(const uint32_t*)&data[12];
+    	if (chunk0Length <= 8)
+    	{
+    		return ISceneSP();
+    	}
+
+    	// Chunk 0 type
+    	const uint32_t chunk0Type = *(const uint32_t*)&data[16];
+    	if (chunk0Type != 0x4E4F534A)
+    	{
+    		return ISceneSP();
+    	}
+
+    	// Chunk 0 data
+    	gltfString = std::string((char*)&data[20], 0, chunk0Length - 8);
+
+    	if (length > chunk0Length + 12)
+    	{
+			//
+			// Chunk 1.
+			//
+
+			if (binaryFile->getSize() < 12 + chunk0Length + 8)
+			{
+				return ISceneSP();
+			}
+
+			// Chunk 1 length
+			const uint32_t chunk1Length = *(const uint32_t*)&data[12 + chunk0Length];
+			if (chunk1Length <= 8)
+			{
+				return ISceneSP();
+			}
+
+			// Chunk 1 type
+			const uint32_t chunk1Type = *(const uint32_t*)&data[16 + chunk0Length];
+			if (chunk1Type != 0x004E4942)
+			{
+				return ISceneSP();
+			}
+
+	    	// Chunk 1 data
+			binaryBuffer = binaryBufferCreate(&data[20 + chunk0Length], chunk1Length - 8);
+    	}
+    }
+    else
+    {
+    	return ISceneSP();
+    }
+
+    //
+
+	auto json = jsonDecode(gltfString);
 
 	if (!json.get())
 	{
@@ -1531,7 +1859,7 @@ ISceneSP VKTS_APIENTRY gltfLoad(const char* filename, const ISceneManagerSP& sce
 
     fileGetDirectory(directory, filename);
 
-	GltfVisitor visitor(directory);
+	GltfVisitor visitor(directory, binaryBuffer);
 
 	json->visit(visitor);
 
@@ -1578,38 +1906,6 @@ ISceneSP VKTS_APIENTRY gltfLoad(const char* filename, const ISceneManagerSP& sce
     for (uint32_t i = 0; i < gltfScene->nodes.size(); i++)
     {
     	auto* gltfNode = gltfScene->nodes[i];
-
-    	VkBool32 isRoot = VK_TRUE;
-
-        for (uint32_t k = 0; k < gltfScene->nodes.size(); k++)
-        {
-        	if (k == i)
-        	{
-        		continue;
-        	}
-
-        	auto* testGltfNode = gltfScene->nodes[k];
-
-            for (uint32_t m = 0; m < testGltfNode->children.size(); m++)
-            {
-            	if (i == testGltfNode->children[m])
-            	{
-            		isRoot = VK_FALSE;
-
-            		break;
-            	}
-            }
-
-            if (!isRoot)
-            {
-            	break;
-            }
-        }
-
-        if (!isRoot)
-        {
-        	continue;
-        }
 
     	//
 

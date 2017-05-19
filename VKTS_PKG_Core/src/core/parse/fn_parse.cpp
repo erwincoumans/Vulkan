@@ -404,6 +404,23 @@ VkBool32 VKTS_APIENTRY parseVec8(const char* buffer, float vec8[8])
     return VK_TRUE;
 }
 
+VkBool32 VKTS_APIENTRY parseVec16(const char* buffer, float vec16[16])
+{
+    if (!buffer || !vec16)
+    {
+        return VK_FALSE;
+    }
+
+    char token[VKTS_MAX_TOKEN_CHARS + 1];
+
+    if (sscanf(buffer, "%256s %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f", token, &vec16[0], &vec16[1], &vec16[2], &vec16[3], &vec16[4], &vec16[5], &vec16[6], &vec16[7], &vec16[8], &vec16[9], &vec16[10], &vec16[11], &vec16[12], &vec16[13], &vec16[14], &vec16[15]) != 17)
+    {
+        return VK_FALSE;
+    }
+
+    return VK_TRUE;
+}
+
 VkBool32 VKTS_APIENTRY parseInt(const char* buffer, int32_t* scalar)
 {
     if (!buffer || !scalar)

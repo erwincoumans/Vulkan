@@ -66,13 +66,9 @@ public:
 
     virtual void setTranslate(const glm::vec3& translate) = 0;
 
-    virtual VkTsRotationMode getNodeRotationMode() const = 0;
+    virtual const Quat& getRotate() const = 0;
 
-    virtual void setNodeRotationMode(const VkTsRotationMode rotationMode) = 0;
-
-    virtual const glm::vec3& getRotate() const = 0;
-
-    virtual void setRotate(const glm::vec3& rotate) = 0;
+    virtual void setRotate(const Quat& rotate) = 0;
 
     virtual const glm::vec3& getScale() const = 0;
 
@@ -82,9 +78,9 @@ public:
 
     virtual void setFinalTranslate(const glm::vec3& translate) = 0;
 
-    virtual const glm::vec3& getFinalRotate() const = 0;
+    virtual const Quat& getFinalRotate() const = 0;
 
-    virtual void setFinalRotate(const glm::vec3& rotate) = 0;
+    virtual void setFinalRotate(const Quat& rotate) = 0;
 
     virtual const glm::vec3& getFinalScale() const = 0;
 
@@ -96,21 +92,9 @@ public:
 
     virtual int32_t getNumberJoints() const = 0;
 
-    virtual const glm::vec3& getBindTranslate() const = 0;
+    virtual const glm::mat4& getInverseBindMatrix() const = 0;
 
-    virtual void setBindTranslate(const glm::vec3& translate) = 0;
-
-    virtual VkTsRotationMode getBindRotationMode() const = 0;
-
-    virtual void setBindRotationMode(const VkTsRotationMode rotationMode) = 0;
-
-    virtual const glm::vec3& getBindRotate() const = 0;
-
-    virtual void setBindRotate(const glm::vec3& rotate) = 0;
-
-    virtual const glm::vec3& getBindScale() const = 0;
-
-    virtual void setBindScale(const glm::vec3& scale) = 0;
+    virtual void setInverseBindMatrix(const glm::mat4& inverseBindMatrix) = 0;
 
     virtual void addChildNode(const std::shared_ptr<INode>& childNode) = 0;
 
@@ -119,6 +103,8 @@ public:
     virtual uint32_t getNumberChildNodes() const = 0;
 
     virtual const SmartPointerVector<std::shared_ptr<INode>>& getChildNodes() const = 0;
+
+    virtual void sortChildNodes() = 0;
 
     virtual void addMesh(const IMeshSP& mesh) = 0;
 
@@ -143,14 +129,6 @@ public:
     virtual uint32_t getNumberLights() const = 0;
 
     virtual const SmartPointerVector<ILightSP>& getLights() const = 0;
-
-    virtual void addConstraint(const IConstraintSP& constraint) = 0;
-
-    virtual VkBool32 removeConstraint(const IConstraintSP& constraint) = 0;
-
-    virtual uint32_t getNumberConstraints() const = 0;
-
-    virtual const SmartPointerVector<IConstraintSP>& getConstraints() const = 0;
 
     virtual void addAnimation(const IAnimationSP& animation) = 0;
 
@@ -201,7 +179,7 @@ public:
 
     virtual void updateDescriptorSetsRecursive(const uint32_t allWriteDescriptorSetsCount, VkWriteDescriptorSet* allWriteDescriptorSets, const uint32_t currentBuffer) = 0;
 
-    virtual void updateTransformRecursive(const double deltaTime, const uint64_t deltaTicks, const double tickTime, const uint32_t currentBuffer, const glm::mat4& parentTransformMatrix, const VkBool32 parentTransformMatrixDirty, const glm::mat4& parentBindMatrix, const VkBool32 parentBindMatrixDirty, const std::shared_ptr<INode>& armatureNode, const OverwriteUpdate* updateOverwrite = nullptr) = 0;
+    virtual void updateTransformRecursive(const double deltaTime, const uint64_t deltaTicks, const double tickTime, const uint32_t currentBuffer, const glm::mat4& parentTransformMatrix, const VkBool32 parentTransformMatrixDirty, const std::shared_ptr<INode>& armatureNode, const OverwriteUpdate* updateOverwrite = nullptr) = 0;
 
     virtual void drawRecursive(const ICommandBuffersSP& cmdBuffer, const SmartPointerVector<IGraphicsPipelineSP>& allGraphicsPipelines, const uint32_t currentBuffer, const std::map<uint32_t, VkTsDynamicOffset>& dynamicOffsetMappings, const OverwriteDraw* renderOverwrite = nullptr) = 0;
 

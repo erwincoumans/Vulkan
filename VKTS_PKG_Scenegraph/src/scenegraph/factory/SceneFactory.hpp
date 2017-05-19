@@ -69,8 +69,6 @@ public:
 
     virtual IChannelSP createChannel(const ISceneManagerSP& sceneManager) override;
 
-    virtual IMarkerSP createMarker(const ISceneManagerSP& sceneManager) override;
-
     virtual IAnimationSP createAnimation(const ISceneManagerSP& sceneManager) override;
 
     //
@@ -78,12 +76,6 @@ public:
     virtual ICameraSP createCamera(const ISceneManagerSP& sceneManager) override;
 
     virtual ILightSP createLight(const ISceneManagerSP& sceneManager) override;
-
-    //
-
-    virtual IConstraintSP createCopyConstraint(const ISceneManagerSP& sceneManager, const enum CopyConstraintType copyConstraintType) override;
-
-    virtual IConstraintSP createLimitConstraint(const ISceneManagerSP& sceneManager, const enum LimitConstraintType limitConstraintType) override;
 
     //
 

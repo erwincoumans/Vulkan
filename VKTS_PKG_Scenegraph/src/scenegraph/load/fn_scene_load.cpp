@@ -2602,13 +2602,13 @@ static VkBool32 sceneLoadChannels(const char* directory, const char* filename, c
                 {
                     channel->setTargetTransform(VKTS_TARGET_TRANSFORM_TRANSLATE);
                 }
-                else if (strncmp(sdata, "ROTATE", 6) == 0)
+                else if (strncmp(sdata, "EULER_ROTATE", 6) == 0)
+                {
+                    channel->setTargetTransform(VKTS_TARGET_TRANSFORM_EULER_ROTATE);
+                }
+                else if (strncmp(sdata, "ROTATE", 17) == 0)
                 {
                     channel->setTargetTransform(VKTS_TARGET_TRANSFORM_ROTATE);
-                }
-                else if (strncmp(sdata, "QUATERNION_ROTATE", 17) == 0)
-                {
-                    channel->setTargetTransform(VKTS_TARGET_TRANSFORM_QUATERNION_ROTATE);
                 }
                 else if (strncmp(sdata, "SCALE", 5) == 0)
                 {
@@ -2845,34 +2845,6 @@ static VkBool32 sceneLoadAnimations(const char* directory, const char* filename,
             if (animation.get())
             {
                 animation->setStop(fdata[0]);
-            }
-            else
-            {
-                logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "No animation");
-
-                return VK_FALSE;
-            }
-        }
-        else if (parseIsToken(buffer, "marker"))
-        {
-            if (!parseStringFloat(buffer, sdata, VKTS_MAX_TOKEN_CHARS, fdata))
-            {
-                return VK_FALSE;
-            }
-
-            if (animation.get())
-            {
-                auto currentMarker = sceneFactory->createMarker(sceneManager);
-
-                if (!currentMarker.get())
-                {
-                	return VK_FALSE;
-                }
-
-                currentMarker->setName(sdata);
-                currentMarker->setTime(fdata[0]);
-
-                animation->addMarker(currentMarker);
             }
             else
             {
@@ -3319,8 +3291,7 @@ static VkBool32 sceneLoadObjects(const char* directory, const char* filename, co
     char buffer[VKTS_MAX_BUFFER_CHARS + 1];
     char sdata0[VKTS_MAX_TOKEN_CHARS + 1];
     char sdata1[VKTS_MAX_TOKEN_CHARS + 1];
-    float fdata[3];
-    VkBool32 bdata[3];
+    float fdata[16];
     int32_t idata;
     uint32_t uidata;
     glm::mat4 mat4;
@@ -3328,10 +3299,6 @@ static VkBool32 sceneLoadObjects(const char* directory, const char* filename, co
     auto object = IObjectSP();
 
     auto node = INodeSP();
-
-    IConstraintSP constraint;
-    ICopyConstraint* copyConstraint = nullptr;
-    ILimitConstraint* limitConstraint = nullptr;
 
     SmartPointerMap<std::string, INodeSP> allNodes;
 
@@ -3489,274 +3456,6 @@ static VkBool32 sceneLoadObjects(const char* directory, const char* filename, co
                 return VK_FALSE;
             }
         }
-        else if (parseIsToken(buffer, "constraint"))
-        {
-            if (!parseString(buffer, sdata0, VKTS_MAX_TOKEN_CHARS))
-            {
-                return VK_FALSE;
-            }
-
-            if (node.get())
-            {
-            	constraint = IConstraintSP();
-
-            	if (strcmp(sdata0, "COPY_LOCATION") == 0)
-            	{
-            		constraint = sceneFactory->createCopyConstraint(sceneManager, COPY_LOCATION);
-            		if (constraint.get())
-            		{
-            			copyConstraint = static_cast<ICopyConstraint*>(constraint.get());
-            		}
-            	}
-            	else if (strcmp(sdata0, "COPY_ROTATION") == 0)
-            	{
-            		constraint = sceneFactory->createCopyConstraint(sceneManager, COPY_ROTATION);
-            		if (constraint.get())
-            		{
-            			copyConstraint = static_cast<ICopyConstraint*>(constraint.get());
-            		}
-            	}
-            	else if (strcmp(sdata0, "COPY_SCALE") == 0)
-            	{
-            		constraint = sceneFactory->createCopyConstraint(sceneManager, COPY_SCALE);
-            		if (constraint.get())
-            		{
-            			copyConstraint = static_cast<ICopyConstraint*>(constraint.get());
-            		}
-            	}
-            	else if (strcmp(sdata0, "LIMIT_LOCATION") == 0)
-            	{
-            		constraint = sceneFactory->createLimitConstraint(sceneManager, LIMIT_LOCATION);
-            		if (constraint.get())
-            		{
-            			limitConstraint = static_cast<ILimitConstraint*>(constraint.get());
-            		}
-            	}
-            	else if (strcmp(sdata0, "LIMIT_ROTATION") == 0)
-            	{
-            		constraint = sceneFactory->createLimitConstraint(sceneManager, LIMIT_ROTATION);
-            		if (constraint.get())
-            		{
-            			limitConstraint = static_cast<ILimitConstraint*>(constraint.get());
-            		}
-            	}
-            	else if (strcmp(sdata0, "LIMIT_SCALE") == 0)
-            	{
-            		constraint = sceneFactory->createLimitConstraint(sceneManager, LIMIT_SCALE);
-            		if (constraint.get())
-            		{
-            			limitConstraint = static_cast<ILimitConstraint*>(constraint.get());
-            		}
-            	}
-				else
-				{
-					logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Unsupported constraint");
-
-					return VK_FALSE;
-				}
-
-            	if (constraint.get())
-            	{
-            		node->addConstraint(constraint);
-            	}
-            }
-            else
-            {
-                logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "No node");
-
-                return VK_FALSE;
-            }
-        }
-        else if (parseIsToken(buffer, "target"))
-        {
-            if (!parseString(buffer, sdata0, VKTS_MAX_TOKEN_CHARS))
-            {
-                return VK_FALSE;
-            }
-
-            if (node.get() && copyConstraint)
-            {
-            	INodeSP targetNode;
-
-            	for (uint32_t i = 0; i < sceneManager->getAllObjects().values().size(); i++)
-            	{
-            		if (!sceneManager->getAllObjects().values()[i]->getRootNode().get())
-            		{
-            			continue;
-            		}
-
-            		targetNode = sceneManager->getAllObjects().values()[i]->getRootNode()->findNodeRecursiveFromRoot(sdata0);
-
-            		if (targetNode.get())
-            		{
-            			break;
-            		}
-            	}
-
-                if (!targetNode.get())
-                {
-                    logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "No target node found");
-
-                    return VK_FALSE;
-                }
-
-                copyConstraint->setTarget(targetNode);
-            }
-            else
-            {
-                logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "No node or copy constraint");
-
-                return VK_FALSE;
-            }
-        }
-        else if (parseIsToken(buffer, "use"))
-        {
-            if (!parseBoolTriple(buffer, &bdata[0], &bdata[1], &bdata[2]))
-            {
-                return VK_FALSE;
-            }
-
-            if (node.get() && copyConstraint)
-            {
-            	copyConstraint->setUse(std::array<VkBool32, 3>{bdata[0], bdata[1], bdata[2]});
-            }
-            else
-            {
-                logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "No node or copy constraint");
-
-                return VK_FALSE;
-            }
-        }
-        else if (parseIsToken(buffer, "invert"))
-        {
-            if (!parseBoolTriple(buffer, &bdata[0], &bdata[1], &bdata[2]))
-            {
-                return VK_FALSE;
-            }
-
-            if (node.get() && copyConstraint)
-            {
-            	copyConstraint->setInvert(std::array<VkBool32, 3>{bdata[0], bdata[1], bdata[2]});
-            }
-            else
-            {
-                logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "No node or copy constraint");
-
-                return VK_FALSE;
-            }
-        }
-        else if (parseIsToken(buffer, "use_offset"))
-        {
-            if (!parseBool(buffer, &bdata[0]))
-            {
-                return VK_FALSE;
-            }
-
-            if (node.get() && copyConstraint)
-            {
-            	copyConstraint->setOffset(bdata[0]);
-            }
-            else
-            {
-                logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "No node or copy constraint");
-
-                return VK_FALSE;
-            }
-        }
-        else if (parseIsToken(buffer, "use_min"))
-        {
-            if (!parseBoolTriple(buffer, &bdata[0], &bdata[1], &bdata[2]))
-            {
-                return VK_FALSE;
-            }
-
-            if (node.get() && limitConstraint)
-            {
-            	limitConstraint->setUseMin(std::array<VkBool32, 3>{bdata[0], bdata[1], bdata[2]});
-            }
-            else
-            {
-                logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "No node or limit constraint");
-
-                return VK_FALSE;
-            }
-        }
-        else if (parseIsToken(buffer, "use_max"))
-        {
-            if (!parseBoolTriple(buffer, &bdata[0], &bdata[1], &bdata[2]))
-            {
-                return VK_FALSE;
-            }
-
-            if (node.get() && limitConstraint)
-            {
-            	limitConstraint->setUseMax(std::array<VkBool32, 3>{bdata[0], bdata[1], bdata[2]});
-            }
-            else
-            {
-                logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "No node or limit constraint");
-
-                return VK_FALSE;
-            }
-        }
-        else if (parseIsToken(buffer, "min"))
-        {
-            if (!parseVec3(buffer, fdata))
-            {
-                return VK_FALSE;
-            }
-
-            if (node.get() && limitConstraint)
-            {
-            	limitConstraint->setMin(glm::vec3(fdata[0], fdata[1], fdata[2]));
-            }
-            else
-            {
-                logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "No node or limit constraint");
-
-                return VK_FALSE;
-            }
-        }
-        else if (parseIsToken(buffer, "max"))
-        {
-            if (!parseVec3(buffer, fdata))
-            {
-                return VK_FALSE;
-            }
-
-            if (node.get() && limitConstraint)
-            {
-            	limitConstraint->setMax(glm::vec3(fdata[0], fdata[1], fdata[2]));
-            }
-            else
-            {
-                logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "No node or limit constraint");
-
-                return VK_FALSE;
-            }
-        }
-        else if (parseIsToken(buffer, "influence"))
-        {
-            if (!parseFloat(buffer, &fdata[0]))
-            {
-                return VK_FALSE;
-            }
-
-            if (node.get() && copyConstraint)
-            {
-            	copyConstraint->setInfluence(fdata[0]);
-            }
-            else if (node.get() && limitConstraint)
-            {
-            	limitConstraint->setInfluence(fdata[0]);
-            }
-            else
-            {
-                logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "No node or constraint");
-
-                return VK_FALSE;
-            }
-        }
         else if (parseIsToken(buffer, "translate"))
         {
             if (!parseVec3(buffer, fdata))
@@ -3777,14 +3476,14 @@ static VkBool32 sceneLoadObjects(const char* directory, const char* filename, co
         }
         else if (parseIsToken(buffer, "rotate"))
         {
-            if (!parseVec3(buffer, fdata))
+            if (!parseVec4(buffer, fdata))
             {
                 return VK_FALSE;
             }
 
             if (node.get())
             {
-                node->setRotate(glm::vec3(fdata[0], fdata[1], fdata[2]));
+                node->setRotate(normalize(Quat(fdata[0], fdata[1], fdata[2], fdata[3])));
             }
             else
             {
@@ -3852,52 +3551,23 @@ static VkBool32 sceneLoadObjects(const char* directory, const char* filename, co
                 return VK_FALSE;
             }
         }
-        else if (parseIsToken(buffer, "bind_translate"))
+        else if (parseIsToken(buffer, "inverse_bind_matrix"))
         {
-            if (!parseVec3(buffer, fdata))
+            if (!parseVec16(buffer, fdata))
             {
                 return VK_FALSE;
             }
 
             if (node.get())
             {
-                node->setBindTranslate(glm::vec3(fdata[0], fdata[1], fdata[2]));
-            }
-            else
-            {
-                logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "No node");
+            	glm::mat4 inverseBindMatrix(1.0);
 
-                return VK_FALSE;
-            }
-        }
-        else if (parseIsToken(buffer, "bind_rotate"))
-        {
-            if (!parseVec3(buffer, fdata))
-            {
-                return VK_FALSE;
-            }
+				for (uint32_t mi = 0; mi < 16; mi++)
+				{
+					inverseBindMatrix[mi / 4][mi % 4] = fdata[mi];
+				}
 
-            if (node.get())
-            {
-                node->setBindRotate(glm::vec3(fdata[0], fdata[1], fdata[2]));
-            }
-            else
-            {
-                logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "No node");
-
-                return VK_FALSE;
-            }
-        }
-        else if (parseIsToken(buffer, "bind_scale"))
-        {
-            if (!parseVec3(buffer, fdata))
-            {
-                return VK_FALSE;
-            }
-
-            if (node.get())
-            {
-                node->setBindScale(glm::vec3(fdata[0], fdata[1], fdata[2]));
+                node->setInverseBindMatrix(inverseBindMatrix);
             }
             else
             {

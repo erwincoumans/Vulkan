@@ -60,10 +60,6 @@ public:
 
     virtual void setStop(const float stop) = 0;
 
-    virtual void setCurrentSection(const int32_t currentMarker) = 0;
-
-    virtual int32_t getCurrentSection() const = 0;
-
     virtual enum AnimationType getAnimationType() const = 0;
 
     virtual void setAnimationType(const enum AnimationType animationType) = 0;
@@ -77,14 +73,6 @@ public:
     virtual void setCurrentTime(const float currentTime) = 0;
 
     virtual float update(const float deltaTime) = 0;
-
-    virtual void addMarker(const IMarkerSP& marker) = 0;
-
-    virtual VkBool32 removeMarker(const IMarkerSP& marker) = 0;
-
-    virtual uint32_t getNumberMarkers() const = 0;
-
-    virtual const SmartPointerVector<IMarkerSP>& getMarkers() const = 0;
 
     virtual void addChannel(const IChannelSP& channel) = 0;
 

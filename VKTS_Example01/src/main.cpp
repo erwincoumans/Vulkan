@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
 
 	uint32_t debug = 0;
 
-	if (vkts::parameterGetUInt32(debug, std::string("-d"), argc, argv) || true)
+	if (vkts::parameterGetUInt32(debug, std::string("-d"), argc, argv))
 	{
 		if (debug)
 		{

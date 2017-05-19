@@ -56,8 +56,8 @@
 typedef enum VkTsTargetTransform_
 {
     VKTS_TARGET_TRANSFORM_TRANSLATE = 0,
-    VKTS_TARGET_TRANSFORM_ROTATE = 1,
-    VKTS_TARGET_TRANSFORM_QUATERNION_ROTATE = 2,
+    VKTS_TARGET_TRANSFORM_EULER_ROTATE = 1,
+    VKTS_TARGET_TRANSFORM_ROTATE = 2,
     VKTS_TARGET_TRANSFORM_SCALE = 3
 } VkTsTargetTransform;
 
@@ -104,8 +104,6 @@ typedef enum VkTsInterpolator_
 
 #include <vkts/scenegraph/scene/IChannel.hpp>
 
-#include <vkts/scenegraph/scene/IMarker.hpp>
-
 #include <vkts/scenegraph/scene/IRenderMaterial.hpp>
 #include <vkts/scenegraph/scene/IBSDFMaterial.hpp>
 #include <vkts/scenegraph/scene/IPhongMaterial.hpp>
@@ -114,8 +112,6 @@ typedef enum VkTsInterpolator_
 #include <vkts/scenegraph/scene/ISubMesh.hpp>
 
 #include <vkts/scenegraph/scene/IAnimation.hpp>
-
-#include <vkts/scenegraph/scene/IConstraint.hpp>
 
 #include <vkts/scenegraph/scene/ICamera.hpp>
 
@@ -129,11 +125,6 @@ typedef enum VkTsInterpolator_
 #include <vkts/scenegraph/scene/IObject.hpp>
 
 #include <vkts/scenegraph/scene/IScene.hpp>
-
-
-#include <vkts/scenegraph/scene/ICopyConstraint.hpp>
-
-#include <vkts/scenegraph/scene/ILimitConstraint.hpp>
 
 /**
  * Shader.

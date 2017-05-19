@@ -83,7 +83,7 @@ public:
     	return VK_TRUE;
     }
 
-    virtual VkBool32 visit(const INode& node, const double deltaTime, const uint64_t deltaTicks, const double tickTime, const uint32_t currentBuffer, const glm::mat4& parentTransformMatrix, const VkBool32 parentTransformMatrixDirty, const glm::mat4& parentBindMatrix, const VkBool32 parentBindMatrixDirty, const INode* armatureNode) const
+    virtual VkBool32 visit(const INode& node, const double deltaTime, const uint64_t deltaTicks, const double tickTime, const uint32_t currentBuffer, const glm::mat4& parentTransformMatrix, const VkBool32 parentTransformMatrixDirty, const INode* armatureNode) const
     {
     	return VK_TRUE;
     }
