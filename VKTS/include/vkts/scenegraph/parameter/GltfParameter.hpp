@@ -761,6 +761,8 @@ public:
     	// animations
     	//
 
+    	// TODO: Only export, when animations are present.
+
     	auto animationsValue = JSONarraySP(new JSONarray());
 
     	if (!animationsValue.get())
