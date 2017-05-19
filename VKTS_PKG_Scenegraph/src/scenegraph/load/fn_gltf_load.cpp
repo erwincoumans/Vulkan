@@ -1788,55 +1788,50 @@ ISceneSP VKTS_APIENTRY gltfLoad(const char* filename, const ISceneManagerSP& sce
     	// Chunk 0.
     	//
 
-    	if (binaryFile->getSize() < 20)
+    	if (binaryFile->getSize() < 12 + 8)
     	{
     		return ISceneSP();
     	}
 
     	// Chunk 0 length
     	const uint32_t chunk0Length = *(const uint32_t*)&data[12];
-    	if (chunk0Length <= 8)
+    	if (chunk0Length > length - 12 - 8)
     	{
     		return ISceneSP();
     	}
 
     	// Chunk 0 type
-    	const uint32_t chunk0Type = *(const uint32_t*)&data[16];
+    	const uint32_t chunk0Type = *(const uint32_t*)&data[12 + 4];
     	if (chunk0Type != 0x4E4F534A)
     	{
     		return ISceneSP();
     	}
 
     	// Chunk 0 data
-    	gltfString = std::string((char*)&data[20], 0, chunk0Length - 8);
+    	gltfString = std::string((char*)&data[12 + 8], 0, chunk0Length);
 
-    	if (length > chunk0Length + 12)
+    	if (length > chunk0Length + 12 + 8)
     	{
 			//
 			// Chunk 1.
 			//
 
-			if (binaryFile->getSize() < 12 + chunk0Length + 8)
-			{
-				return ISceneSP();
-			}
-
 			// Chunk 1 length
-			const uint32_t chunk1Length = *(const uint32_t*)&data[12 + chunk0Length];
-			if (chunk1Length <= 8)
-			{
-				return ISceneSP();
-			}
+			const uint32_t chunk1Length = *(const uint32_t*)&data[12 + 8 + chunk0Length];
+	    	if (chunk1Length > length - 12 - 8 - 8 - chunk0Length)
+	    	{
+	    		return ISceneSP();
+	    	}
 
 			// Chunk 1 type
-			const uint32_t chunk1Type = *(const uint32_t*)&data[16 + chunk0Length];
+			const uint32_t chunk1Type = *(const uint32_t*)&data[12 + 8 + chunk0Length + 4];
 			if (chunk1Type != 0x004E4942)
 			{
 				return ISceneSP();
 			}
 
 	    	// Chunk 1 data
-			binaryBuffer = binaryBufferCreate(&data[20 + chunk0Length], chunk1Length - 8);
+			binaryBuffer = binaryBufferCreate(&data[12 + 8 + chunk0Length + 8], chunk1Length);
     	}
     }
     else

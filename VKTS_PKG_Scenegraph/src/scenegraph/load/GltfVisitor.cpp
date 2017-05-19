@@ -1131,53 +1131,51 @@ void GltfVisitor::visitTexture(JSONobject& jsonObject)
 	// Required
 	//
 
-	if (!jsonObject.hasKey("sampler") || !jsonObject.hasKey("source"))
-	{
-		state.push(GltfState_Error);
-		return;
-	}
-
 	//
 	//
 	//
 
-	auto sampler = jsonObject.getValue("sampler");
-
-	sampler->visit(*this);
-
-	if (state.top() == GltfState_Error)
+	if (jsonObject.hasKey("source"))
 	{
-		return;
+		auto source = jsonObject.getValue("source");
+
+		source->visit(*this);
+
+		if (state.top() == GltfState_Error)
+		{
+			return;
+		}
+
+		if (allGltfImages.size() <= (uint32_t)gltfInteger)
+		{
+			state.push(GltfState_Error);
+			return;
+		}
+
+		gltfTexture.source = &(allGltfImages[gltfInteger]);
 	}
 
-	if (allGltfSamplers.size() <= (uint32_t)gltfInteger)
+	if (jsonObject.hasKey("sampler"))
 	{
-		state.push(GltfState_Error);
-		return;
-	}
+		auto sampler = jsonObject.getValue("sampler");
 
-	gltfTexture.sampler = &(allGltfSamplers[gltfInteger]);
+		sampler->visit(*this);
+
+		if (state.top() == GltfState_Error)
+		{
+			return;
+		}
+
+		if (allGltfSamplers.size() <= (uint32_t)gltfInteger)
+		{
+			state.push(GltfState_Error);
+			return;
+		}
+
+		gltfTexture.sampler = &(allGltfSamplers[gltfInteger]);
+	}
 
 	//
-
-	auto source = jsonObject.getValue("source");
-
-	source->visit(*this);
-
-	if (state.top() == GltfState_Error)
-	{
-		return;
-	}
-
-	if (allGltfImages.size() <= (uint32_t)gltfInteger)
-	{
-		state.push(GltfState_Error);
-		return;
-	}
-
-	gltfTexture.source = &(allGltfImages[gltfInteger]);
-
-	// Optional
 
 	if (jsonObject.hasKey("internalFormat"))
 	{
