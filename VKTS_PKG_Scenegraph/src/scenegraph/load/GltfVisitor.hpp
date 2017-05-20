@@ -89,9 +89,11 @@ enum GltfState {
 	GltfState_Material_Extensions_PbrSpecularGlossiness,
 	GltfState_Material_TextureInfo,
 	GltfState_Mesh_Primitive,
+	GltfState_Mesh_Weights,
 	GltfState_Mesh_Primitive_Attributes,
 	GltfState_Skin_Joints,
 	GltfState_Node_Children,
+	GltfState_Node_Weights,
 	GltfState_Animation_Sampler,
 	GltfState_Animation_Channel,
 	GltfState_Animation_Channel_Target,
@@ -239,6 +241,7 @@ typedef struct _GltfPrimitive {
 
 typedef struct _GltfMesh {
 	Vector<GltfPrimitive> primitives;
+	Vector<float> weights;
 	std::string name;
 } GltfMesh;
 
@@ -282,6 +285,7 @@ typedef struct _GltfNode {
 	float rotation[4];
 	float scale[3];
 	float translation[3];
+	Vector<float> weights;
 	std::string name;
 } GltfNode;
 

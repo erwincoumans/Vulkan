@@ -991,6 +991,27 @@ VkBool32 Example::buildShader()
 
 	allBSDFVertexShaderModules.append(bsdfVertexShaderModule);
 
+
+	vertexShaderBinary = vkts::fileLoadBinary(VKTS_BSDF6_VERTEX_SHADER_NAME);
+
+	if (!vertexShaderBinary.get())
+	{
+		vkts::logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Could not load vertex shader: '%s'", VKTS_BSDF6_VERTEX_SHADER_NAME);
+
+		return VK_FALSE;
+	}
+
+	bsdfVertexShaderModule = vkts::shaderModuleCreate(VKTS_BSDF6_VERTEX_SHADER_NAME, contextObject->getDevice()->getDevice(), 0, vertexShaderBinary->getSize(), (uint32_t*)vertexShaderBinary->getData());
+
+	if (!bsdfVertexShaderModule.get())
+	{
+		vkts::logPrint(VKTS_LOG_ERROR, __FILE__, __LINE__, "Could not create vertex shader module.");
+
+		return VK_FALSE;
+	}
+
+	allBSDFVertexShaderModules.append(bsdfVertexShaderModule);
+
 	return VK_TRUE;
 }
 

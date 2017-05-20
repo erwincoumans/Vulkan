@@ -31,10 +31,12 @@
 #define VKTS_GLTF_MR_FORWARD_FRAGMENT_SHADER_NAME "shader/SPIR/V/glTF_mr_forward.frag.spv"
 #define VKTS_GLTF_MR_FORWARD_NO_TEXCOORD_FRAGMENT_SHADER_NAME "shader/SPIR/V/glTF_mr_forward_no_texcoord.frag.spv"
 #define VKTS_GLTF_MR_FORWARD_TWO_TEXCOORD_FRAGMENT_SHADER_NAME "shader/SPIR/V/glTF_mr_forward_two_texcoord.frag.spv"
+#define VKTS_GLTF_MR_FORWARD_TANGENT_FRAGMENT_SHADER_NAME "shader/SPIR/V/glTF_mr_forward_tangent.frag.spv"
 
 #define VKTS_GLTF_SG_FORWARD_FRAGMENT_SHADER_NAME "shader/SPIR/V/glTF_sg_forward.frag.spv"
 #define VKTS_GLTF_SG_FORWARD_NO_TEXCOORD_FRAGMENT_SHADER_NAME "shader/SPIR/V/glTF_sg_forward_no_texcoord.frag.spv"
 #define VKTS_GLTF_SG_FORWARD_TWO_TEXCOORD_FRAGMENT_SHADER_NAME "shader/SPIR/V/glTF_sg_forward_two_texcoord.frag.spv"
+#define VKTS_GLTF_SG_FORWARD_TANGENT_FRAGMENT_SHADER_NAME "shader/SPIR/V/glTF_sg_forward_tangent.frag.spv"
 
 namespace vkts
 {
@@ -1212,6 +1214,10 @@ static VkBool32 gltfProcessSubMesh(ISubMeshSP& subMesh, const GltfVisitor& visit
 			{
 				fragmentShader = VKTS_GLTF_SG_FORWARD_FRAGMENT_SHADER_NAME;
 			}
+			else if ((bsdfMaterial->getAttributes() & VKTS_VERTEX_BUFFER_TYPE_TANGENTS) == VKTS_VERTEX_BUFFER_TYPE_TANGENTS)
+			{
+				fragmentShader = VKTS_GLTF_SG_FORWARD_TANGENT_FRAGMENT_SHADER_NAME;
+			}
 			else
 			{
 				fragmentShader = VKTS_GLTF_SG_FORWARD_NO_TEXCOORD_FRAGMENT_SHADER_NAME;
@@ -1226,6 +1232,10 @@ static VkBool32 gltfProcessSubMesh(ISubMeshSP& subMesh, const GltfVisitor& visit
 			else if ((bsdfMaterial->getAttributes() & VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0) == VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0)
 			{
 				fragmentShader = VKTS_GLTF_MR_FORWARD_FRAGMENT_SHADER_NAME;
+			}
+			else if ((bsdfMaterial->getAttributes() & VKTS_VERTEX_BUFFER_TYPE_TANGENTS) == VKTS_VERTEX_BUFFER_TYPE_TANGENTS)
+			{
+				fragmentShader = VKTS_GLTF_MR_FORWARD_TANGENT_FRAGMENT_SHADER_NAME;
 			}
 			else
 			{
@@ -1513,6 +1523,7 @@ static VkBool32 gltfProcessNode(INodeSP& node, const GltfVisitor& visitor, const
                 	return VK_FALSE;
                 }
 
+                // TODO: Take exceptions into account.
 				if (timeAccessor->count != targetAccessor->count)
 				{
                 	return VK_FALSE;

@@ -1512,8 +1512,6 @@ void GltfVisitor::visitMaterial(JSONobject& jsonObject)
 
 void GltfVisitor::visitMesh(JSONobject& jsonObject)
 {
-	// FIXME Morph target 'weights'
-
 	//
 	// Required
 	//
@@ -1543,6 +1541,27 @@ void GltfVisitor::visitMesh(JSONobject& jsonObject)
 	}
 
 	state.pop();
+
+	//
+
+	if (jsonObject.hasKey("weights"))
+	{
+		objectArray = VK_TRUE;
+
+		auto weights = jsonObject.getValue("weights");
+
+		state.push(GltfState_Mesh_Weights);
+		weights->visit(*this);
+
+		objectArray = VK_FALSE;
+
+		if (state.top() == GltfState_Error)
+		{
+			return;
+		}
+
+		state.pop();
+	}
 
 	//
 
@@ -1931,8 +1950,6 @@ void GltfVisitor::visitSkin(JSONobject& jsonObject)
 
 void GltfVisitor::visitNode(JSONobject& jsonObject)
 {
-	// FIXME: Morph target 'weights'
-
 	//
 	// Dependencies.
 	//
@@ -1957,6 +1974,27 @@ void GltfVisitor::visitNode(JSONobject& jsonObject)
 
 	//
 	//
+	//
+
+	if (jsonObject.hasKey("weights"))
+	{
+		objectArray = VK_TRUE;
+
+		auto weights = jsonObject.getValue("weights");
+
+		state.push(GltfState_Node_Weights);
+		weights->visit(*this);
+
+		objectArray = VK_FALSE;
+
+		if (state.top() == GltfState_Error)
+		{
+			return;
+		}
+
+		state.pop();
+	}
+
 	//
 
 	if (jsonObject.hasKey("children"))
@@ -3597,6 +3635,7 @@ void GltfVisitor::visit(JSONarray& jsonArray)
 			for (int32_t i = 0; i < (int32_t)jsonArray.size(); i++)
 			{
 				gltfMesh.primitives.clear();
+				gltfMesh.weights.clear();
 				gltfMesh.name = "Mesh_" + std::to_string(i);
 
 				//
@@ -3711,6 +3750,8 @@ void GltfVisitor::visit(JSONarray& jsonArray)
 				gltfNode.translation[1] = 0.0f;
 				gltfNode.translation[2] = 0.0f;
 
+				gltfNode.weights.clear();
+
 				//
 
 				state.push(GltfState_Node);
@@ -3809,6 +3850,20 @@ void GltfVisitor::visit(JSONarray& jsonArray)
 				gltfMesh.primitives.append(gltfPrimitive);
 			}
 		}
+		else if (gltfState == GltfState_Mesh_Weights)
+		{
+			for (int32_t i = 0; i < (int32_t)jsonArray.size(); i++)
+			{
+				jsonArray.getValueAt(i)->visit(*this);
+
+				if (state.top() == GltfState_Error)
+				{
+					return;
+				}
+
+				gltfMesh.weights.append(gltfFloat);
+			}
+		}
 		else if (gltfState == GltfState_Skin_Joints)
 		{
 			for (int32_t i = 0; i < (int32_t)jsonArray.size(); i++)
@@ -3835,6 +3890,20 @@ void GltfVisitor::visit(JSONarray& jsonArray)
 				}
 
 				gltfNode.children.append((uint32_t)gltfInteger);
+			}
+		}
+		else if (gltfState == GltfState_Node_Weights)
+		{
+			for (int32_t i = 0; i < (int32_t)jsonArray.size(); i++)
+			{
+				jsonArray.getValueAt(i)->visit(*this);
+
+				if (state.top() == GltfState_Error)
+				{
+					return;
+				}
+
+				gltfNode.weights.append(gltfFloat);
 			}
 		}
 		else if (gltfState == GltfState_Animation_Sampler)

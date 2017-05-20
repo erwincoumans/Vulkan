@@ -104,7 +104,7 @@ VkBool32 LoadTask::execute()
 		return VK_FALSE;
 	}
 
-	if (allBSDFVertexShaderModules.size() == 6)
+	if (allBSDFVertexShaderModules.size() == 7)
 	{
 		sceneManager->addVertexShaderModule(VKTS_VERTEX_BUFFER_TYPE_VERTEX | VKTS_VERTEX_BUFFER_TYPE_NORMAL | VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0, allBSDFVertexShaderModules[0]);
 		sceneManager->addVertexShaderModule(VKTS_VERTEX_BUFFER_TYPE_VERTEX | VKTS_VERTEX_BUFFER_TYPE_NORMAL, allBSDFVertexShaderModules[1]);
@@ -112,6 +112,7 @@ VkBool32 LoadTask::execute()
 		sceneManager->addVertexShaderModule(VKTS_VERTEX_BUFFER_TYPE_VERTEX | VKTS_VERTEX_BUFFER_TYPE_TANGENTS | VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0 | VKTS_VERTEX_BUFFER_TYPE_BONES, allBSDFVertexShaderModules[3]);
 		sceneManager->addVertexShaderModule(VKTS_VERTEX_BUFFER_TYPE_VERTEX | VKTS_VERTEX_BUFFER_TYPE_TANGENTS | VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0 | VKTS_VERTEX_BUFFER_TYPE_TEXCOORD1, allBSDFVertexShaderModules[4]);
 		sceneManager->addVertexShaderModule(VKTS_VERTEX_BUFFER_TYPE_VERTEX | VKTS_VERTEX_BUFFER_TYPE_TANGENTS | VKTS_VERTEX_BUFFER_TYPE_TEXCOORD0 | VKTS_VERTEX_BUFFER_TYPE_TEXCOORD1 | VKTS_VERTEX_BUFFER_TYPE_BONES, allBSDFVertexShaderModules[5]);
+		sceneManager->addVertexShaderModule(VKTS_VERTEX_BUFFER_TYPE_VERTEX | VKTS_VERTEX_BUFFER_TYPE_TANGENTS, allBSDFVertexShaderModules[6]);
 	}
 
 	//
