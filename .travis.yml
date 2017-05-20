@@ -12,17 +12,20 @@ os: linux
 
 before_install:
   - sudo apt-get -qq update
+  - sudo apt-get install software-properties-common
+  - sudo add-apt-repository ppa:george-edison55/cmake-3.x
+  - sudo apt-get install cmake
   - sudo apt-get install -y libx11-xcb-dev libxrandr-dev libwayland-dev
   - cd
   - mkdir Development
   - cd Development
-  - wget https://vulkan.lunarg.com/sdk/download/1.0.37.0/linux/vulkansdk-linux-x86_64-1.0.37.0.run
-  - chmod 777 vulkansdk-linux-x86_64-1.0.37.0.run
-  - ./vulkansdk-linux-x86_64-1.0.37.0.run
+  - wget https://vulkan.lunarg.com/sdk/download/1.0.49.0/linux/vulkansdk-linux-x86_64-1.0.49.0.run
+  - chmod 777 vulkansdk-linux-x86_64-1.0.49.0.run
+  - ./vulkansdk-linux-x86_64-1.0.49.0.run
   - cd $TRAVIS_BUILD_DIR
 
 before_script:
-  - export VULKAN_SDK=~/Development/VulkanSDK/1.0.37.0/x86_64
+  - export VULKAN_SDK=~/Development/VulkanSDK/1.0.49.0/x86_64
   - export PATH=$PATH:$VULKAN_SDK/bin
   - export LD_LIBRARY_PATH=$VULKAN_SDK/lib
   - export VK_LAYER_PATH=$VULKAN_SDK/etc/explicit_layer.d
