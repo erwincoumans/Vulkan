@@ -1523,10 +1523,12 @@ static VkBool32 gltfProcessNode(INodeSP& node, const GltfVisitor& visitor, const
                 	return VK_FALSE;
                 }
 
-                // TODO: Take exceptions into account.
 				if (timeAccessor->count != targetAccessor->count)
 				{
-                	return VK_FALSE;
+	                if (gltfChannel.targetPath != "weights" && timeAccessor->count != gltfNode.weights.size() *targetAccessor->count)
+	                {
+	                	return VK_FALSE;
+	                }
 				}
 
 				if (!visitor.isFloat(timeAccessor->componentType) || !visitor.isFloat(targetAccessor->componentType))
@@ -1566,6 +1568,8 @@ static VkBool32 gltfProcessNode(INodeSP& node, const GltfVisitor& visitor, const
                 }
                 else
                 {
+                	// TODO: Add "weights" as target path.
+
                 	return VK_FALSE;
                 }
 

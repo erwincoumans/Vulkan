@@ -89,6 +89,7 @@ enum GltfState {
 	GltfState_Material_Extensions_PbrSpecularGlossiness,
 	GltfState_Material_TextureInfo,
 	GltfState_Mesh_Primitive,
+	GltfState_Mesh_Primitive_Targets,
 	GltfState_Mesh_Weights,
 	GltfState_Mesh_Primitive_Attributes,
 	GltfState_Skin_Joints,
@@ -220,6 +221,12 @@ typedef struct _GltfMaterial {
 	std::string name;
 } GltfMaterial;
 
+typedef struct _GltfTarget {
+	GltfAccessor* position;
+	GltfAccessor* normal;
+	GltfAccessor* tangent;
+} GltfTarget;
+
 typedef struct _GltfPrimitive {
 	GltfAccessor* position;
 	GltfAccessor* normal;
@@ -236,6 +243,9 @@ typedef struct _GltfPrimitive {
 	int32_t mode;
 
 	GltfMaterial* material;
+
+	Vector<GltfTarget> targets;
+
 	std::string name;
 } GltfPrimitive;
 
@@ -347,6 +357,7 @@ private:
 	GltfSparseIndex gltfSparseIndex;
 	GltfSparseValue gltfSparseValue;
 	GltfAccessor gltfAccessor;
+	GltfTarget gltfTarget;
 	GltfPrimitive gltfPrimitive;
 	GltfImage gltfImage;
 	GltfSampler gltfSampler;
@@ -402,6 +413,7 @@ private:
 	void visitMaterial_Extensions_PbrSpecularGlossiness(JSONobject& jsonObject);
 	void visitMaterial_TextureInfo(JSONobject& jsonObject);
 	void visitMesh_Primitive(JSONobject& jsonObject);
+	void visitMesh_Primitive_Targets(JSONobject& jsonObject);
 	void visitMesh_Primitive_Attributes(JSONobject& jsonObject);
 	void visitAnimation_Sampler(JSONobject& jsonObject);
 	void visitAnimation_Channel(JSONobject& jsonObject);

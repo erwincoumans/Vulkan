@@ -30,7 +30,7 @@ namespace vkts
 {
 
 GltfVisitor::GltfVisitor(const std::string& directory, const IBinaryBufferSP& binaryBuffer) :
-	JsonVisitor(), directory(directory), binaryBuffer(binaryBuffer), state(), subState(), gltfBool(VK_FALSE), gltfString(), gltfInteger(0), gltfFloat(0.0f), gltfIntegerArray{}, gltfFloatArray{}, arrayIndex(0), arraySize(0), numberArray(VK_FALSE), objectArray(VK_FALSE), gltfExtensions{}, gltfBuffer{}, gltfBufferView{}, gltfSparse{}, gltfSparseIndex{}, gltfSparseValue{} , gltfAccessor{}, gltfPrimitive{}, gltfImage{}, gltfSampler{}, gltfTexture{}, gltfTextureInfo{}, gltfMaterial{}, gltfMesh{}, gltfCamera{}, gltfSkin{}, gltfNode{}, gltfAnimation_Sampler{}, gltfChannel{}, gltfAnimation{}, gltfScene{}, allGltfBuffers(), allGltfBufferViews(), allGltfSparses(), allGltfAccessors(), allGltfImages(), allGltfSamplers(), allGltfTextures(), allGltfMaterials(), allGltfMeshes(), allGltfCameras(), allGltfSkins(), allGltfNodes(), allGltfAnimations(), allGltfScenes(), defaultScene(nullptr)
+	JsonVisitor(), directory(directory), binaryBuffer(binaryBuffer), state(), subState(), gltfBool(VK_FALSE), gltfString(), gltfInteger(0), gltfFloat(0.0f), gltfIntegerArray{}, gltfFloatArray{}, arrayIndex(0), arraySize(0), numberArray(VK_FALSE), objectArray(VK_FALSE), gltfExtensions{}, gltfBuffer{}, gltfBufferView{}, gltfSparse{}, gltfSparseIndex{}, gltfSparseValue{} , gltfAccessor{}, gltfTarget{}, gltfPrimitive{}, gltfImage{}, gltfSampler{}, gltfTexture{}, gltfTextureInfo{}, gltfMaterial{}, gltfMesh{}, gltfCamera{}, gltfSkin{}, gltfNode{}, gltfAnimation_Sampler{}, gltfChannel{}, gltfAnimation{}, gltfScene{}, allGltfBuffers(), allGltfBufferViews(), allGltfSparses(), allGltfAccessors(), allGltfImages(), allGltfSamplers(), allGltfTextures(), allGltfMaterials(), allGltfMeshes(), allGltfCameras(), allGltfSkins(), allGltfNodes(), allGltfAnimations(), allGltfScenes(), defaultScene(nullptr)
 {
 }
 
@@ -2695,8 +2695,6 @@ void GltfVisitor::visitMaterial_TextureInfo(JSONobject& jsonObject)
 
 void GltfVisitor::visitMesh_Primitive(JSONobject& jsonObject)
 {
-	// FIXME Morph target 'targets'
-
 	//
 	// Required
 	//
@@ -2724,6 +2722,27 @@ void GltfVisitor::visitMesh_Primitive(JSONobject& jsonObject)
 	state.pop();
 
 	// Optional
+
+	if (jsonObject.hasKey("targets"))
+	{
+		objectArray = VK_TRUE;
+
+		auto targets = jsonObject.getValue("targets");
+
+		state.push(GltfState_Mesh_Primitive_Targets);
+		targets->visit(*this);
+
+		objectArray = VK_FALSE;
+
+		if (state.top() == GltfState_Error)
+		{
+			return;
+		}
+
+		state.pop();
+	}
+
+	//
 
 	if (jsonObject.hasKey("indices"))
 	{
@@ -2804,6 +2823,97 @@ void GltfVisitor::visitMesh_Primitive(JSONobject& jsonObject)
 	}
 }
 
+void GltfVisitor::visitMesh_Primitive_Targets(JSONobject& jsonObject)
+{
+	//
+	// Required
+	//
+
+	uint32_t targetCount = 0;
+
+	//
+	//
+	//
+
+	if (jsonObject.hasKey("POSITION"))
+	{
+		auto position = jsonObject.getValue("POSITION");
+
+		position->visit(*this);
+
+		if (state.top() == GltfState_Error)
+		{
+			return;
+		}
+
+		if (allGltfAccessors.size() <= (uint32_t)gltfInteger)
+		{
+			state.push(GltfState_Error);
+			return;
+		}
+
+		gltfTarget.position = &(allGltfAccessors[gltfInteger]);
+
+		targetCount++;
+	}
+
+	//
+
+	if (jsonObject.hasKey("NORMAL"))
+	{
+		auto normal = jsonObject.getValue("NORMAL");
+
+		normal->visit(*this);
+
+		if (state.top() == GltfState_Error)
+		{
+			return;
+		}
+
+		if (allGltfAccessors.size() <= (uint32_t)gltfInteger)
+		{
+			state.push(GltfState_Error);
+			return;
+		}
+
+		gltfTarget.normal = &(allGltfAccessors[gltfInteger]);
+
+		targetCount++;
+	}
+
+	//
+
+	if (jsonObject.hasKey("TANGENT"))
+	{
+		auto tangent = jsonObject.getValue("TANGENT");
+
+		tangent->visit(*this);
+
+		if (state.top() == GltfState_Error)
+		{
+			return;
+		}
+
+		if (allGltfAccessors.size() <= (uint32_t)gltfInteger)
+		{
+			state.push(GltfState_Error);
+			return;
+		}
+
+		gltfTarget.tangent = &(allGltfAccessors[gltfInteger]);
+
+		targetCount++;
+	}
+
+	//
+
+	if (targetCount == 0)
+	{
+		state.push(GltfState_Error);
+		return;
+	}
+}
+
 void GltfVisitor::visitMesh_Primitive_Attributes(JSONobject& jsonObject)
 {
 	//
@@ -2826,6 +2936,12 @@ void GltfVisitor::visitMesh_Primitive_Attributes(JSONobject& jsonObject)
 
 	if (state.top() == GltfState_Error)
 	{
+		return;
+	}
+
+	if (allGltfAccessors.size() <= (uint32_t)gltfInteger)
+	{
+		state.push(GltfState_Error);
 		return;
 	}
 
@@ -3836,6 +3952,7 @@ void GltfVisitor::visit(JSONarray& jsonArray)
 				gltfPrimitive.indices = nullptr;
 				gltfPrimitive.mode = 4;
 				gltfPrimitive.material = nullptr;
+				gltfPrimitive.targets.clear();
 				gltfPrimitive.name = "Primitive_" + std::to_string(i);
 
 				//
@@ -3848,6 +3965,26 @@ void GltfVisitor::visit(JSONarray& jsonArray)
 				}
 
 				gltfMesh.primitives.append(gltfPrimitive);
+			}
+		}
+		else if (gltfState == GltfState_Mesh_Primitive_Targets)
+		{
+			for (int32_t i = 0; i < (int32_t)jsonArray.size(); i++)
+			{
+				gltfTarget.position = nullptr;
+				gltfTarget.normal = nullptr;
+				gltfTarget.tangent = nullptr;
+
+				//
+
+				jsonArray.getValueAt(i)->visit(*this);
+
+				if (state.top() == GltfState_Error)
+				{
+					return;
+				}
+
+				gltfPrimitive.targets.append(gltfTarget);
 			}
 		}
 		else if (gltfState == GltfState_Mesh_Weights)
@@ -4630,6 +4767,10 @@ void GltfVisitor::visit(JSONobject& jsonObject)
 	else if (gltfState == GltfState_Mesh_Primitive)
 	{
 		visitMesh_Primitive(jsonObject);
+	}
+	else if (gltfState == GltfState_Mesh_Primitive_Targets)
+	{
+		visitMesh_Primitive_Targets(jsonObject);
 	}
 	else if (gltfState == GltfState_Mesh_Primitive_Attributes)
 	{
