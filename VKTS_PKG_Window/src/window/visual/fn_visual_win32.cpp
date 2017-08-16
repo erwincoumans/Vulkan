@@ -448,7 +448,17 @@ VkBool32 VKTS_APIENTRY _visualDispatchMessages()
 
 int32_t VKTS_APIENTRY _visualGetNumberDisplays()
 {
-    return static_cast<int32_t>(GetSystemMetrics(SM_CMONITORS));
+    int32_t displayCount = 0;
+
+    DISPLAY_DEVICE dd;
+    dd.cb = sizeof(DISPLAY_DEVICE);
+
+    while (EnumDisplayDevices(NULL, displayCount, &dd, 0))
+    {
+        displayCount += 1;
+    }
+
+    return displayCount;
 }
 
 INativeDisplayWP VKTS_APIENTRY _visualCreateDefaultDisplay()
